@@ -1,10 +1,6 @@
 services:
-  - type: web
+  - type: static
     name: lifebalance-webfrontend
-    runtime: node
     plan: free
     buildCommand: npm install && npm run build
-    startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
+    staticPublishPath: ./out
