@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { Check, Loader2 } from "lucide-react"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { useToast } from "@/components/ui/ToastProvider"
@@ -8,8 +9,16 @@ import { usePlans } from "@/lib/landing/usePlans"
 import { useMySubscription } from "@/lib/landing/useMySubscription"
 import { formatPlanPrice, getPlanCheckoutUrl, sortPlansForDisplay } from "@/lib/landing/plans"
 import type { PlanDto } from "@/lib/api/organizations-types"
-import { PlanConfirmModal } from "@/components/landing/PlanConfirmModal"
-import { CancelPlanModal } from "@/components/dashboard/settings/CancelPlanModal"
+
+// Solo se necesitan tras una interacción (clic en "Seleccionar Plan" /
+// "Cancelar plan") — cargarlos de forma diferida evita que su JS entre en
+// el bundle inicial de la página de Settings.
+const PlanConfirmModal = dynamic(() =>
+  import("@/components/landing/PlanConfirmModal").then((mod) => mod.PlanConfirmModal)
+)
+const CancelPlanModal = dynamic(() =>
+  import("@/components/dashboard/settings/CancelPlanModal").then((mod) => mod.CancelPlanModal)
+)
 
 function FeatureItem({ children, light }: { children: React.ReactNode; light?: boolean }) {
   return (

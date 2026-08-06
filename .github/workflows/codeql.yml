@@ -1,0 +1,45 @@
+name: CodeQL
+
+# SAST más profundo que ESLint (ci.yml ya corre eslint-plugin-security en
+# cada push/PR) — CodeQL construye un grafo de flujo de datos real y detecta
+# patrones de inyección/XSS/path-traversal que un linter basado en reglas
+# sintácticas no alcanza a ver. Corre en push/PR a main y además una vez por
+# semana, para atrapar problemas nuevos en el código ya mergeado (p. ej. si
+# se agrega una regla de CodeQL nueva entre análisis).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1" # lunes 06:00 UTC
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inicializar CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+
+      # Sin build-mode "none" tendría que compilar el proyecto (npm ci +
+      # npm run build) — para JS/TS puro no hace falta, CodeQL analiza el
+      # código fuente directamente.
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Analizar
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"

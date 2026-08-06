@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type TouchEvent } from "react"
+import Image from "next/image"
 import { BadgeCheck, ChevronLeft, ChevronRight, ExternalLink, ShieldCheck, Star, Truck } from "lucide-react"
 
 const AUTOPLAY_MS = 5000
@@ -84,9 +85,14 @@ function ProductCard({ product }: { product: Product }) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center rounded-3xl bg-white p-8 md:p-10 border border-emerald-100/60">
       {/* Imagen */}
       <div className="flex justify-center">
-        <div className="relative w-full max-w-xs rounded-3xl bg-[#F4F9F5] p-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={product.imageUrl} alt={product.name} className="w-full h-auto object-contain" loading="lazy" />
+        <div className="relative aspect-square w-full max-w-xs rounded-3xl bg-[#F4F9F5] p-8">
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 320px"
+            className="object-contain"
+          />
         </div>
       </div>
 

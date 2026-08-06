@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, type FormEvent } from "react"
-import { CheckCircle2, X } from "lucide-react"
+import { CheckCircle2 } from "lucide-react"
 import { FormField } from "@/components/ui/FormField"
 import { SubmitButton } from "@/components/ui/SubmitButton"
+import { Modal } from "@/components/ui/Modal"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { MAX_LENGTHS, validateBoundedText, validateEmail, validateName, validateRequired } from "@/lib/validation/rules"
 
@@ -26,8 +27,6 @@ export function DemoRequestModal({ open, onClose }: DemoRequestModalProps) {
   })
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof Form, string>>>({})
   const [submitted, setSubmitted] = useState(false)
-
-  if (!open) return null
 
   function update<K extends keyof Form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -64,86 +63,77 @@ export function DemoRequestModal({ open, onClose }: DemoRequestModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={handleClose} aria-hidden="true" />
-
-      <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
-        <button
-          type="button"
-          onClick={handleClose}
-          aria-label="Cerrar"
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-gray-100"
-        >
-          <X className="h-4 w-4" />
-        </button>
-
-        {submitted ? (
-          <div className="py-4 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
-              <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-            </div>
-            <h3 className="mt-4 text-lg font-bold text-[#1E3E2B]">Solicitud enviada</h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Recibimos tu solicitud de demo técnica. Nuestro equipo se pondrá en contacto contigo a{" "}
-              <strong>{form.email}</strong> para coordinar un horario.
-            </p>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="mt-6 w-full rounded-full bg-[#2D5A43] py-3 text-sm font-bold text-white transition-colors hover:bg-[#1E3E2B]"
-            >
-              Entendido
-            </button>
+    <Modal open={open} onClose={handleClose} titleId="demo-request-title" maxWidth="max-w-md">
+      {submitted ? (
+        <div className="py-4 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
+            <CheckCircle2 className="h-6 w-6 text-emerald-600" />
           </div>
-        ) : (
-          <>
-            <h3 className="text-lg font-bold text-[#1E3E2B]">Solicitar demo técnica</h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Cuéntanos un poco sobre tu equipo y te contactamos para agendar una sesión.
-            </p>
+          <h3 id="demo-request-title" className="mt-4 text-lg font-bold text-[#1E3E2B]">
+            Solicitud enviada
+          </h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Recibimos tu solicitud de demo técnica. Nuestro equipo se pondrá en contacto contigo a{" "}
+            <strong>{form.email}</strong> para coordinar un horario.
+          </p>
+          <button
+            type="button"
+            onClick={handleClose}
+            className="mt-6 w-full rounded-full bg-[#2D5A43] py-3 text-sm font-bold text-white transition-colors hover:bg-[#1E3E2B]"
+          >
+            Entendido
+          </button>
+        </div>
+      ) : (
+        <>
+          <h3 id="demo-request-title" className="text-lg font-bold text-[#1E3E2B]">
+            Solicitar demo técnica
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Cuéntanos un poco sobre tu equipo y te contactamos para agendar una sesión.
+          </p>
 
-            <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
-              <FormField
-                label="Nombre"
-                name="name"
-                required
-                maxLength={MAX_LENGTHS.firstName + MAX_LENGTHS.lastName}
-                value={form.name}
-                onChange={(e) => update("name", e.target.value)}
-                error={fieldErrors.name}
-              />
-              <FormField
-                label="Correo electrónico"
-                type="email"
-                name="email"
-                required
-                maxLength={MAX_LENGTHS.email}
-                value={form.email}
-                onChange={(e) => update("email", e.target.value)}
-                error={fieldErrors.email}
-              />
-              <FormField
-                label="Empresa (opcional)"
-                name="company"
-                maxLength={MAX_LENGTHS.organizationName}
-                value={form.company}
-                onChange={(e) => update("company", e.target.value)}
-                error={fieldErrors.company}
-              />
-              <FormField
-                label="Mensaje (opcional)"
-                name="message"
-                maxLength={MAX_LENGTHS.notificationBody}
-                value={form.message}
-                onChange={(e) => update("message", e.target.value)}
-                error={fieldErrors.message}
-              />
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
+            <FormField
+              label="Nombre"
+              name="name"
+              required
+              maxLength={MAX_LENGTHS.firstName + MAX_LENGTHS.lastName}
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+              error={fieldErrors.name}
+            />
+            <FormField
+              label="Correo electrónico"
+              type="email"
+              name="email"
+              required
+              maxLength={MAX_LENGTHS.email}
+              value={form.email}
+              onChange={(e) => update("email", e.target.value)}
+              error={fieldErrors.email}
+            />
+            <FormField
+              label="Empresa (opcional)"
+              name="company"
+              maxLength={MAX_LENGTHS.organizationName}
+              value={form.company}
+              onChange={(e) => update("company", e.target.value)}
+              error={fieldErrors.company}
+            />
+            <FormField
+              label="Mensaje (opcional)"
+              name="message"
+              maxLength={MAX_LENGTHS.notificationBody}
+              value={form.message}
+              onChange={(e) => update("message", e.target.value)}
+              error={fieldErrors.message}
+            />
 
-              <SubmitButton>Enviar solicitud</SubmitButton>
-            </form>
-          </>
-        )}
-      </div>
-    </div>
+            <SubmitButton>Enviar solicitud</SubmitButton>
+          </form>
+        </>
+      )}
+    </Modal>
   )
 }

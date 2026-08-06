@@ -1,8 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { ArrowRight, Download } from "lucide-react"
-import { DemoRequestModal } from "./DemoRequestModal"
+
+// Diferido: solo se monta tras el clic en "Solicitar Demo Técnica".
+const DemoRequestModal = dynamic(() => import("./DemoRequestModal").then((mod) => mod.DemoRequestModal))
 
 export function OverviewCTA() {
   const [demoOpen, setDemoOpen] = useState(false)

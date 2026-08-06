@@ -1,0 +1,31 @@
+version: 2
+updates:
+  # Dependencias de npm (package.json). ci.yml ya corre `npm audit` en cada
+  # push/PR para detectar vulnerabilidades conocidas — Dependabot es el
+  # complemento que además abre el PR con el bump de versión listo.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      # Agrupa parches/minors en un solo PR semanal para no saturar de
+      # notificaciones — los majors (p. ej. next@14 -> next@16, un upgrade
+      # con breaking changes, ver docs/SECURITY.md) siempre vienen en su
+      # propio PR aparte, nunca agrupados, para revisarlos con cuidado.
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    labels:
+      - "dependencies"
+
+  # Las Actions del propio CI (actions/checkout, github/codeql-action, etc.)
+  # también son una superficie de supply-chain — hay que mantenerlas al día.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "ci"

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { Check, Loader2 } from "lucide-react"
 import { useAuth } from "@/lib/auth/AuthContext"
@@ -11,7 +12,10 @@ import { useMySubscription } from "@/lib/landing/useMySubscription"
 import { formatPlanPrice, getPlanCheckoutUrl, sortPlansForDisplay } from "@/lib/landing/plans"
 import { setPendingPlanId } from "@/lib/landing/pendingPlan"
 import type { PlanDto } from "@/lib/api/organizations-types"
-import { PlanConfirmModal } from "./PlanConfirmModal"
+
+// Diferido: solo se necesita tras hacer clic en "Seleccionar Plan" — no
+// debe pesar en el bundle inicial de la landing pública.
+const PlanConfirmModal = dynamic(() => import("./PlanConfirmModal").then((mod) => mod.PlanConfirmModal))
 
 function FeatureItem({ children }: { children: React.ReactNode }) {
   return (
