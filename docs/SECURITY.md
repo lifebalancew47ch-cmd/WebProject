@@ -1,0 +1,104 @@
+# Seguridad — LifeBalance Web
+
+Este documento resume las prácticas de DevSecOps aplicadas a este repositorio y, muy importante,
+**cuáles de los 5 puntos pedidos corresponden a este repo y cuáles son responsabilidad del backend**.
+Este proyecto es un sitio Next.js exportado 100% estático (`output: 'export'`, `render.yaml` tipo
+`static`) — no tiene servidor propio, no tiene base de datos propia, y no ejecuta código en Render
+más allá de servir archivos. Eso cambia bastante qué significa "seguro" aquí.
+
+## 1. SAST — Análisis Estático de Seguridad
+
+- **`eslint-plugin-security`** agregado como devDependency y activado en `.eslintrc.json`
+  (`plugin:security/recommended-legacy`), sobre la base de `next/core-web-vitals` que ya traía el
+  proyecto.
+- Se desactivó `security/detect-object-injection`: es una regla con muchísimos falsos positivos en
+  TypeScript (marca cualquier `obj[variable]`, incluyendo accesos completamente seguros a objetos
+  tipados como `PLANS[planId]` o `MAX_LENGTHS[campo]`). Es la práctica estándar en proyectos reales
+  que usan este plugin — dejarla activa generaría ruido sin valor real.
+- `npm run lint` corre limpio con esta configuración (un solo warning preexistente de
+  `react-hooks/exhaustive-deps` en `AuthContext.tsx`, no relacionado a seguridad).
+- Corre automáticamente en CI en cada push/PR a `main` (job `lint` en
+  `.github/workflows/ci.yml`).
+
+**SonarQube:** no se integró — requiere una cuenta/instancia (SonarCloud) y un token que el equipo
+tendría que dar de alta. Si lo quieren, el siguiente paso es crear el proyecto en SonarCloud y
+agregar `SONAR_TOKEN` a los secrets del repo; puedo agregar el job cuando exista esa cuenta.
+
+## 2. SCA — Escaneo de Dependencias
+
+- Job `dependency-audit` en `.github/workflows/ci.yml` corre `npm audit --audit-level=high` en
+  cada push/PR.
+- **Hallazgo real al implementar esto:** `npm audit` reporta **6 vulnerabilidades de severidad
+  alta**, todas originadas en `next@14.2.35` (la versión que ya estaba instalada, no algo que
+  cambié). El fix real requiere subir a Next 16 — un cambio mayor que no hice como parte de esta
+  tarea porque no me correspondía decidir unilateralmente un upgrade de versión mayor.
+- **Por qué no es tan grave como suena:** revisé cada advisory — casi todos son sobre Server
+  Actions, Server Components, Middleware, WebSocket upgrades y servidores custom. Esta app no usa
+  nada de eso (`output: 'export'` = sin servidor Next.js corriendo, sin Middleware, sin Server
+  Actions — confirmado en `next.config.mjs`). No significa que no haya que arreglarlo, pero no es
+  explotable en el modo en que esta app está desplegada hoy.
+- Por eso el paso de `npm audit` en CI tiene `continue-on-error: true` por ahora — informa pero no
+  bloquea el pipeline. En cuanto se decida hacer el upgrade a Next 16 (fuera del alcance de esta
+  tarea), hay que quitar ese `continue-on-error` para que vulnerabilidades altas/críticas sí
+  bloqueen merges futuros.
+- **Snyk:** el job incluye un paso opcional que solo corre si el repo tiene configurado el secret
+  `SNYK_TOKEN` (Settings → Secrets and variables → Actions). Sin ese secret, se omite sin fallar el
+  pipeline — no puedo crear la cuenta de Snyk por ustedes.
+
+## 3. Gestión Segura de Secretos
+
+- **Auditoría del código fuente:** se revisó todo `app/`, `components/`, `lib/` y `docs/` buscando
+  patrones de credenciales hardcodeadas (connection strings, API keys, contraseñas literales) —
+  **no se encontró ninguna**. Esto ya era una práctica que se venía siguiendo en la sesión (nunca
+  se escribió la credencial de MongoDB usada para investigación en ningún archivo del repo).
+- **`.gitignore`** corregido: antes solo ignoraba `.env*.local`, dejando la puerta abierta a que un
+  `.env` normal se subiera por error. Ahora ignora `.env` y `.env.*` en general, exceptuando
+  `.env.example`.
+- **`.env.example`** nuevo, documentando las 7 variables de entorno que la app realmente usa.
+- **Punto clave para este proyecto en particular:** al ser un export 100% estático, **cualquier
+  variable que la app necesite en el navegador debe llevar el prefijo `NEXT_PUBLIC_`**, y Next.js
+  la incrusta tal cual en el JavaScript que se descarga en cada visita. Eso significa que, por
+  diseño, **no puede haber secretos reales en este repo** — ni aunque se configuren "variables de
+  entorno en el panel de Render", porque técnicamente se compilan al bundle público de todas
+  formas. Si en algún momento se necesita un secreto de verdad (una API key privada, por ejemplo),
+  la única forma correcta es que viva en uno de los microservicios backend, nunca aquí.
+
+## 4. Principio de Mínimo Privilegio
+
+Esto es 100% responsabilidad del backend — este repo no tiene base de datos ni emite tokens de
+API propios. Dicho eso, un hallazgo concreto de esta sesión que vale la pena escalar:
+
+> La cadena de conexión de MongoDB Atlas que se usó para investigar bugs
+> (`mongodb+srv://LBback:...@lifebalance.kwyxwll.mongodb.net`) tiene acceso de lectura/escritura a
+> **todas** las bases de datos de **todos** los microservicios (Auth, Administration, Gamification,
+> Ingestion, MLPrediction, MedicalData, OrganizationSaaS, Sedentary, Reporting), más `sample_mflix`
+> y `admin`. Un solo usuario de Mongo con ese alcance viola el principio de mínimo privilegio: si
+> esa credencial se filtra, compromete los 9 servicios a la vez, no uno. Vale la pena pedirle al
+> equipo backend que separen credenciales por servicio (o al menos lectura vs. escritura) en vez de
+> un único usuario "LBback" con privilegios globales.
+
+## 5. Logging y Monitoreo Seguro
+
+- Se revisó todo el código en busca de `console.log/info/warn/error` — solo existían dos, ambos
+  placeholders temporales dejados al conectar la selección de planes
+  (`PricingSection.tsx`, `BillingContent.tsx`), que **no** registraban contraseñas ni tokens (solo
+  `planId` y `userId`), pero se eliminaron de todas formas: cualquier `console.log` en producción
+  queda visible en las devtools de cualquier visitante, así que la política es no usarlos para
+  nada que toque datos de usuario, ni siquiera IDs.
+- `lib/api/client.ts` (el cliente HTTP compartido por las 6 APIs) no hace logging propio de
+  requests/responses — los errores se propagan como `ApiError` con un mensaje ya sanitizado
+  (nunca incluye el body crudo de la respuesta, que podría contener tokens en un `RefreshTokenResponse`
+  o similar).
+- Lo que este repo **no controla**: los logs del lado servidor de los 6 microservicios. Si loguean
+  passwords o tokens en texto plano, es un hallazgo para reportarle al equipo backend — no hay
+  forma de auditar eso desde aquí sin acceso a sus logs.
+
+## Resumen de lo que quedó implementado
+
+| Punto pedido | Implementado aquí | Pendiente / responsabilidad de otro equipo |
+|---|---|---|
+| SAST | ✅ ESLint + eslint-plugin-security en CI | SonarQube (requiere cuenta) |
+| SCA | ✅ `npm audit` en CI, Snyk opcional | Activar Snyk (requiere `SNYK_TOKEN`); upgrade a Next 16 |
+| Secretos | ✅ `.gitignore`, `.env.example`, auditoría sin hallazgos | — |
+| Mínimo privilegio | ⚠️ Hallazgo documentado arriba | Backend: separar roles de Mongo por servicio |
+| Logging seguro | ✅ Sin `console.log` de datos de usuario en el cliente | Backend: auditar sus propios logs de servidor |

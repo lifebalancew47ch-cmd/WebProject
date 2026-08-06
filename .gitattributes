@@ -1,0 +1,6 @@
+# El whitepaper.pdf se generó a mano como PDF sin compresión (puro texto
+# ASCII con offsets de byte exactos en la tabla xref). Sin esta línea, Git
+# podría no detectarlo como binario y convertir sus saltos de línea
+# (LF -> CRLF) en máquinas con core.autocrlf=true, corrompiendo los offsets
+# y rompiendo el archivo.
+*.pdf binary

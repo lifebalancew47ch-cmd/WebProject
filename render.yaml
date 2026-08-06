@@ -1,0 +1,6 @@
+services:
+  - type: static
+    name: lifebalance-webfrontend
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./out

@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # SAST: análisis estático del código (ESLint + eslint-plugin-security)
+  lint:
+    name: Lint & SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run lint
+
+  # SCA: escaneo de dependencias con vulnerabilidades conocidas
+  dependency-audit:
+    name: Dependency Audit (SCA)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      # No bloqueante por ahora: hay vulnerabilidades conocidas en next@14.x
+      # (ver docs/SECURITY.md) cuyo fix requiere subir a Next 16, una
+      # decisión de upgrade mayor que no corresponde forzar aquí. Quitar
+      # `continue-on-error` en cuanto ese upgrade se haga para que el CI
+      # bloquee ante nuevas vulnerabilidades altas/críticas.
+      - name: npm audit (nivel alto o superior)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+      # Escaneo opcional con Snyk — se activa solo si el repo tiene
+      # configurado el secret SNYK_TOKEN (Settings → Secrets → Actions).
+      # Sin ese secret, este paso se omite sin fallar el pipeline.
+      - name: Snyk (opcional, requiere SNYK_TOKEN)
+        if: ${{ secrets.SNYK_TOKEN != '' }}
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  # Verifica que el sitio estático realmente compile antes de mergear.
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build

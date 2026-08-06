@@ -1,0 +1,98 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1974 >>
+stream
+BT
+/F1 22 Tf
+1 0 0 1 72 740 Tm
+(LifeBalance Watch) Tj
+/F2 13 Tf
+1 0 0 1 72 710 Tm
+(Whitepaper Técnico - Bio-gestión predictiva para entornos ejecutivos) Tj
+1 0 0 1 72 690 Tm
+() Tj
+/F1 12 Tf
+1 0 0 1 72 675 Tm
+(Resumen) Tj
+/F2 10 Tf
+1 0 0 1 72 655 Tm
+(LifeBalance Watch combina un dispositivo wearable con Computer Vision y modelos) Tj
+1 0 0 1 72 640 Tm
+(predictivos para anticipar señales de fatiga y estrés en líderes y equipos ejecutivos,) Tj
+1 0 0 1 72 625 Tm
+(antes de que afecten el rendimiento o la salud.) Tj
+1 0 0 1 72 610 Tm
+() Tj
+/F1 12 Tf
+1 0 0 1 72 595 Tm
+(Tecnología) Tj
+/F2 10 Tf
+1 0 0 1 72 575 Tm
+(- Visión Espacial: mapeo ergonómico 3D del espacio de trabajo, sin sensores vestibles.) Tj
+1 0 0 1 72 560 Tm
+(- Métricas de Fatiga: detección de fatiga cognitiva vía micro-gestos y parpadeo.) Tj
+1 0 0 1 72 545 Tm
+(- rPPG \(Remote Photoplethysmography\): frecuencia cardíaca por cambios sutiles en la piel.) Tj
+1 0 0 1 72 530 Tm
+(- Privacidad on-edge: todo el procesamiento de imagen ocurre en el dispositivo del usuario;) Tj
+1 0 0 1 72 515 Tm
+(  ninguna imagen facial sale de él.) Tj
+1 0 0 1 72 500 Tm
+(- Latencia cero: respuesta en milisegundos para alertas críticas de salud ejecutiva.) Tj
+1 0 0 1 72 485 Tm
+() Tj
+/F1 12 Tf
+1 0 0 1 72 470 Tm
+(Metodología Bio-Management) Tj
+/F2 10 Tf
+1 0 0 1 72 450 Tm
+(Monitoreo continuo de postura, frecuencia cardíaca y niveles de oxígeno, con una precisión) Tj
+1 0 0 1 72 435 Tm
+(predictiva reportada del 98% en la detección temprana de fatiga.) Tj
+1 0 0 1 72 420 Tm
+() Tj
+/F1 12 Tf
+1 0 0 1 72 405 Tm
+(Planes) Tj
+/F2 10 Tf
+1 0 0 1 72 385 Tm
+(Individual \($29/mes\), Corporativo \($199/mes, hasta 25 licencias\) y Enterprise \(a medida\),) Tj
+1 0 0 1 72 370 Tm
+(con integraciones API, dashboard ejecutivo en tiempo real y soporte prioritario 24/7.) Tj
+1 0 0 1 72 355 Tm
+() Tj
+/F2 9 Tf
+1 0 0 1 72 340 Tm
+(Este documento es material informativo de LifeBalance Watch y no constituye asesoría médica.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000002277 00000 n 
+0000002379 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2476
+%%EOF
