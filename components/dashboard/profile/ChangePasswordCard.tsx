@@ -9,37 +9,40 @@ import { AlertMessage } from "@/components/ui/AlertMessage"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { changePassword } from "@/lib/api/auth"
 import { ApiError } from "@/lib/api/client"
-import { MAX_LENGTHS } from "@/lib/validation/rules"
-
-const MIN_PASSWORD_LENGTH = 12
+import { MAX_LENGTHS, MIN_PASSWORD_LENGTH } from "@/lib/validation/rules"
+import { changePasswordSchema, flattenFieldErrors } from "@/lib/validation/schemas"
 
 export function ChangePasswordCard() {
   const { accessToken } = useAuth()
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmNewPassword, setConfirmNewPassword] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<{ currentPassword?: string; newPassword?: string; confirmNewPassword?: string }>({})
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    // Re-entrancy guard: bloquea también un submit disparado por script
+    // directo al <form>, que no respeta el atributo disabled del botón.
+    if (loading) return
     setError(null)
     setSuccess(false)
 
-    if (newPassword.length < MIN_PASSWORD_LENGTH || newPassword.length > MAX_LENGTHS.password) {
-      setError(`La nueva contraseña debe tener entre ${MIN_PASSWORD_LENGTH} y ${MAX_LENGTHS.password} caracteres.`)
+    const result = changePasswordSchema.safeParse({ currentPassword, newPassword, confirmNewPassword })
+    if (!result.success) {
+      const errors = flattenFieldErrors(result.error)
+      setFieldErrors(errors)
+      setError(Object.values(errors)[0] ?? "Revisa los campos antes de continuar.")
       return
     }
-    if (newPassword !== confirmNewPassword) {
-      setError("Las contraseñas no coinciden.")
-      return
-    }
+    setFieldErrors({})
     if (!accessToken) return
 
     setLoading(true)
     try {
-      await changePassword({ currentPassword, newPassword, confirmNewPassword }, accessToken)
+      await changePassword(result.data, accessToken)
       setSuccess(true)
       setCurrentPassword("")
       setNewPassword("")
@@ -59,7 +62,7 @@ export function ChangePasswordCard() {
           Cambiar contraseña
         </h3>
       </div>
-      <p className="mt-1 text-xs text-gray-500">Usa una contraseña de al menos 12 caracteres.</p>
+      <p className="mt-1 text-xs text-gray-500">Usa una contraseña de al menos {MIN_PASSWORD_LENGTH} caracteres.</p>
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
         {success ? <AlertMessage type="success">Contraseña actualizada correctamente.</AlertMessage> : null}
@@ -72,17 +75,25 @@ export function ChangePasswordCard() {
           required
           maxLength={MAX_LENGTHS.password}
           value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
+          onChange={(e) => {
+            setCurrentPassword(e.target.value)
+            if (fieldErrors.currentPassword) setFieldErrors((prev) => ({ ...prev, currentPassword: undefined }))
+          }}
+          error={fieldErrors.currentPassword}
         />
         <PasswordField
           label="Nueva contraseña"
           name="newPassword"
           autoComplete="new-password"
-          placeholder="Mínimo 12 caracteres"
+          placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
           required
           maxLength={MAX_LENGTHS.password}
           value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          onChange={(e) => {
+            setNewPassword(e.target.value)
+            if (fieldErrors.newPassword) setFieldErrors((prev) => ({ ...prev, newPassword: undefined }))
+          }}
+          error={fieldErrors.newPassword}
         />
         <PasswordField
           label="Confirmar nueva contraseña"
@@ -91,7 +102,11 @@ export function ChangePasswordCard() {
           required
           maxLength={MAX_LENGTHS.password}
           value={confirmNewPassword}
-          onChange={(e) => setConfirmNewPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmNewPassword(e.target.value)
+            if (fieldErrors.confirmNewPassword) setFieldErrors((prev) => ({ ...prev, confirmNewPassword: undefined }))
+          }}
+          error={fieldErrors.confirmNewPassword}
         />
 
         <SubmitButton loading={loading} className="w-auto px-6">

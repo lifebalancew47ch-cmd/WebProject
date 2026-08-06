@@ -13,6 +13,7 @@ import { ApiError } from "@/lib/api/client"
 import { GuestOnly } from "@/components/auth/GuestOnly"
 import {
   MAX_LENGTHS,
+  MIN_PASSWORD_LENGTH,
   sanitizeText,
   stripInvalidSlugChars,
   validateEmail,
@@ -21,8 +22,7 @@ import {
   validateRequired,
   validateUsername,
 } from "@/lib/validation/rules"
-
-const MIN_PASSWORD_LENGTH = 12
+import { flattenFieldErrors, registerSchema } from "@/lib/validation/schemas"
 
 type FormFields = {
   firstName: string
@@ -83,40 +83,36 @@ function RegisterForm() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    // Re-entrancy guard: bloquea también un submit disparado por script
+    // directo al <form> (form.requestSubmit() / evento "submit" sintético),
+    // que no respeta el atributo disabled del botón.
+    if (loading) return
     setError(null)
 
-    const nextErrors: Partial<Record<keyof FormFields, string>> = {}
-    ;(["firstName", "lastName", "email", "username", "phoneNumber"] as const).forEach((key) => {
-      const message = validateField(key, form[key])
-      if (message) nextErrors[key] = message
-    })
-    setFieldErrors(nextErrors)
-    if (Object.keys(nextErrors).length > 0) {
+    // Compuerta final antes de tocar la red: revalida TODO el formulario con
+    // Zod, sin importar si cada campo disparó su onBlur (ver
+    // lib/validation/schemas.ts). Los validateField/handleBlur de arriba
+    // siguen dando feedback instantáneo mientras el usuario escribe.
+    const result = registerSchema.safeParse(form)
+    if (!result.success) {
+      setFieldErrors(flattenFieldErrors(result.error))
       setError("Revisa los campos marcados antes de continuar.")
       return
     }
-
-    if (form.password.length < MIN_PASSWORD_LENGTH || form.password.length > MAX_LENGTHS.password) {
-      setError(`La contraseña debe tener entre ${MIN_PASSWORD_LENGTH} y ${MAX_LENGTHS.password} caracteres.`)
-      return
-    }
-    if (form.password !== form.confirmPassword) {
-      setError("Las contraseñas no coinciden.")
-      return
-    }
+    setFieldErrors({})
 
     setLoading(true)
     try {
       await register({
-        firstName: sanitizeText(form.firstName),
-        lastName: sanitizeText(form.lastName),
-        email: sanitizeText(form.email),
-        username: sanitizeText(form.username),
-        phoneNumber: form.phoneNumber ? sanitizeText(form.phoneNumber) : undefined,
-        password: form.password,
-        confirmPassword: form.confirmPassword,
+        firstName: sanitizeText(result.data.firstName),
+        lastName: sanitizeText(result.data.lastName),
+        email: sanitizeText(result.data.email),
+        username: sanitizeText(result.data.username),
+        phoneNumber: result.data.phoneNumber ? sanitizeText(result.data.phoneNumber) : undefined,
+        password: result.data.password,
+        confirmPassword: result.data.confirmPassword,
       })
-      router.push(`/login?registered=1&email=${encodeURIComponent(sanitizeText(form.email))}`)
+      router.push(`/login?registered=1&email=${encodeURIComponent(sanitizeText(result.data.email))}`)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo crear la cuenta.")
     } finally {
@@ -208,11 +204,12 @@ function RegisterForm() {
           label="Contraseña"
           name="password"
           autoComplete="new-password"
-          placeholder="Mínimo 12 caracteres"
+          placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
           required
           maxLength={MAX_LENGTHS.password}
           value={form.password}
           onChange={(e) => update("password", e.target.value)}
+          error={fieldErrors.password}
         />
 
         <PasswordField
@@ -223,6 +220,7 @@ function RegisterForm() {
           maxLength={MAX_LENGTHS.password}
           value={form.confirmPassword}
           onChange={(e) => update("confirmPassword", e.target.value)}
+          error={fieldErrors.confirmPassword}
         />
 
         <SubmitButton loading={loading}>Crear cuenta</SubmitButton>

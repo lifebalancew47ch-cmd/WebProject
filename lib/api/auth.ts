@@ -1,11 +1,14 @@
 import { apiFetch } from "./client"
 import type {
+  AuditLogDto,
   ChangePasswordRequest,
   ConfirmEmailRequest,
   ForgotPasswordRequest,
+  LoginHistoryDto,
   LoginRequest,
   LoginResponse,
   LogoutRequest,
+  PagedResult,
   RefreshTokenRequest,
   RefreshTokenResponse,
   RegisterRequest,
@@ -104,3 +107,22 @@ export const changePassword = (payload: ChangePasswordRequest, token: string) =>
     },
     token
   )
+
+/**
+ * `/api/v1/Audit/*` requiere rol Admin (ver docs/AUTH_PROFILE_API.md) — con un
+ * usuario normal responde 403, no 401, así que el caller debe distinguir ese
+ * caso de un error genérico en vez de asumir que siempre hay datos.
+ */
+export const getLoginHistory = (params: { page?: number; pageSize?: number } = {}, token: string) => {
+  const query = new URLSearchParams(
+    Object.entries({ page: 1, pageSize: 20, ...params }).map(([k, v]) => [k, String(v)])
+  )
+  return apiFetch<PagedResult<LoginHistoryDto>>(`/api/v1/Audit/login-history?${query}`, { method: "GET" }, token)
+}
+
+export const getSecurityEvents = (params: { page?: number; pageSize?: number } = {}, token: string) => {
+  const query = new URLSearchParams(
+    Object.entries({ page: 1, pageSize: 20, ...params }).map(([k, v]) => [k, String(v)])
+  )
+  return apiFetch<PagedResult<AuditLogDto>>(`/api/v1/Audit/security-events?${query}`, { method: "GET" }, token)
+}

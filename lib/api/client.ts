@@ -80,7 +80,21 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Zero-leakage: un 5xx es un fallo del servidor, no algo que el usuario deba
+ * resolver — su `detail`/`message` puede traer una excepción interna si el
+ * backend está mal configurado (ASP.NET en modo Development, por ejemplo).
+ * En vez de confiar en lo que mande el body, siempre se muestra un mensaje
+ * genérico para cualquier status >= 500. Los 4xx sí se muestran tal cual:
+ * ahí el mensaje ES para el usuario (validación, credenciales inválidas,
+ * "correo ya registrado", etc.) — no es una fuga, es el diseño de la API.
+ */
+const GENERIC_SERVER_ERROR = "Ocurrió un error en el servidor. Intenta de nuevo en unos minutos."
+
 function extractErrorMessage(status: number, body: unknown): ApiError {
+  if (status >= 500) {
+    return new ApiError(GENERIC_SERVER_ERROR, status)
+  }
   if (body && typeof body === "object") {
     const asApiResponse = body as Partial<ApiResponse<unknown>>
     const stringErrors = Array.isArray(asApiResponse.errors)
@@ -155,7 +169,20 @@ export async function jsonFetch<T>(
   }
 
   const text = await res.text()
-  const body = text ? JSON.parse(text) : null
+  let body: unknown = null
+  if (text) {
+    try {
+      body = JSON.parse(text)
+    } catch {
+      // Respuesta no-JSON (página de error HTML de un proxy/CDN, timeout de
+      // gateway, etc.) — nunca se debe propagar la excepción del parser ni
+      // el texto crudo de la respuesta hacia la UI.
+      throw new ApiError(
+        res.ok ? "La respuesta del servidor no se pudo interpretar." : GENERIC_SERVER_ERROR,
+        res.status
+      )
+    }
+  }
 
   if (!res.ok) {
     // Un 401 con token adjunto significa que expiró (no que falte) — se

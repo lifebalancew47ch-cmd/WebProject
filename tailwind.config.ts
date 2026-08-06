@@ -27,11 +27,16 @@ const config: Config = {
           "60%": { transform: "scale(1.15) rotate(8deg)", opacity: "1" },
           "100%": { transform: "scale(1) rotate(0deg)", opacity: "1" },
         },
+        gradientShift: {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
       },
       animation: {
         floatAndBreathe: "floatAndBreathe 4.5s ease-in-out infinite",
         fadeSlideUp: "fadeSlideUp 0.5s ease-out",
         iconPop: "iconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        gradientShift: "gradientShift 6s ease-in-out infinite",
       },
     },
   },

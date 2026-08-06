@@ -4,3 +4,44 @@ services:
     plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: ./out
+    headers:
+      # Content-Security-Policy calibrado para lo que esta app realmente
+      # carga (verificado por grep, ver docs/SECURITY.md):
+      # - script-src/style-src necesitan 'unsafe-inline' porque Next.js
+      #   (output: export) embebe el payload de hidratación como <script>
+      #   inline, y varios componentes usan style={{...}} inline.
+      # - connect-src lista los 5 microservicios de LifeBalance en Render.
+      #   OJO: si algún NEXT_PUBLIC_*_API_URL cambia a un host distinto en
+      #   el dashboard de Render, hay que actualizar esta lista también —
+      #   el CSP no lee esas env vars, es un valor fijo del header.
+      # - img-src incluye los hosts de imágenes de producto (MercadoLibre/
+      #   Amazon) usados en WatchProductSection.
+      - path: /*
+        name: Content-Security-Policy
+        value: >-
+          default-src 'self';
+          script-src 'self' 'unsafe-inline';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data: https://http2.mlstatic.com https://m.media-amazon.com;
+          font-src 'self' data:;
+          media-src 'self';
+          connect-src 'self' https://lifebalance-auth-service.onrender.com https://lifebalance-notifications-api.onrender.com https://lifebalance-dashboard-service.onrender.com https://lifebalance-organization-saas.onrender.com https://lifebalance-reporting-service.onrender.com;
+          frame-ancestors 'none';
+          object-src 'none';
+          base-uri 'self';
+          form-action 'self';
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: geolocation=(), camera=(), microphone=(), payment=()
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains

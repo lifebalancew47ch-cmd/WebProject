@@ -4,6 +4,8 @@ import { useState } from "react"
 import { CategoryNav } from "./CategoryNav"
 import { FAQAccordion } from "./FAQAccordion"
 import { BillingContent } from "./BillingContent"
+import { IntegrationsContent } from "./IntegrationsContent"
+import { SecurityContent } from "./SecurityContent"
 
 export function HelpCenterContent() {
   const [activeCategory, setActiveCategory] = useState("General")
@@ -15,6 +17,10 @@ export function HelpCenterContent() {
         <FAQAccordion />
       ) : activeCategory === "Planes y Facturación" ? (
         <BillingContent />
+      ) : activeCategory === "Integraciones" ? (
+        <IntegrationsContent />
+      ) : activeCategory === "Seguridad" ? (
+        <SecurityContent />
       ) : (
         <div className="flex-1 rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-400">
           Aún no hay contenido de ayuda para &ldquo;{activeCategory}&rdquo;.

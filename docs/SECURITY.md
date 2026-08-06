@@ -93,6 +93,33 @@ API propios. Dicho eso, un hallazgo concreto de esta sesión que vale la pena es
   passwords o tokens en texto plano, es un hallazgo para reportarle al equipo backend — no hay
   forma de auditar eso desde aquí sin acceso a sus logs.
 
+## 6. Headers de seguridad HTTP (defensa en profundidad)
+
+Auditoría adicional (2026-08-06), fuera de los 5 puntos originales:
+
+- **`render.yaml`** ahora define `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy` y `Strict-Transport-Security` para todas las rutas (`/*`).
+  Calibrados a lo que esta app realmente carga (verificado con grep de `https://` en `app/`/`components/`):
+  las 5 APIs de LifeBalance en `onrender.com` (`connect-src`), e imágenes de producto de
+  `http2.mlstatic.com` / `m.media-amazon.com` en `WatchProductSection` (`img-src`).
+- `script-src`/`style-src` incluyen `'unsafe-inline'` porque el export estático de Next.js embebe el
+  payload de hidratación como `<script>` inline, y varios componentes usan `style={{...}}` inline —
+  sin `unsafe-inline` el sitio se rompería. Es un trade-off consciente, no un descuido.
+- **Mantenimiento:** si algún `NEXT_PUBLIC_*_API_URL` cambia a un host distinto en el dashboard de
+  Render, hay que actualizar `connect-src` en `render.yaml` también — el CSP es un header estático,
+  no lee esas env vars en runtime.
+- **Requiere acción manual:** estos headers solo se aplican si el servicio de Render está sincronizado
+  como Blueprint desde este `render.yaml`. Si el servicio se creó manualmente en el dashboard (no vía
+  Blueprint), hay que ir a Render → el servicio → "Blueprint" y sincronizar, o copiar los headers a
+  mano en la sección de Headers del dashboard.
+
+**Hallazgo relacionado, no corregido aquí:** `accessToken`/`refreshToken` se guardan en
+`localStorage` (`lib/auth/session.ts`), legibles por cualquier JS que corra en la página. La mitigación
+real es evitar que XSS ocurra (ya se cumple: sin `dangerouslySetInnerHTML` en todo el repo, React
+escapa todo por defecto) — el CSP de arriba es la capa adicional. Migrar a cookies `httpOnly` requeriría
+que el backend las emita con `Set-Cookie`, lo cual es un cambio de arquitectura mayor (este sitio no
+tiene servidor propio que pueda setear cookies) y no se hizo como parte de esta sesión.
+
 ## Resumen de lo que quedó implementado
 
 | Punto pedido | Implementado aquí | Pendiente / responsabilidad de otro equipo |
@@ -102,3 +129,4 @@ API propios. Dicho eso, un hallazgo concreto de esta sesión que vale la pena es
 | Secretos | ✅ `.gitignore`, `.env.example`, auditoría sin hallazgos | — |
 | Mínimo privilegio | ⚠️ Hallazgo documentado arriba | Backend: separar roles de Mongo por servicio |
 | Logging seguro | ✅ Sin `console.log` de datos de usuario en el cliente | Backend: auditar sus propios logs de servidor |
+| Headers HTTP | ✅ CSP + headers de seguridad en `render.yaml` | Confirmar sync de Blueprint en Render; considerar httpOnly cookies si el backend llega a soportarlas |

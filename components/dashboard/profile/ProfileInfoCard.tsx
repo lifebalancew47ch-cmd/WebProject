@@ -11,6 +11,7 @@ import { getProfile, updateProfile } from "@/lib/api/auth"
 import { ApiError } from "@/lib/api/client"
 import type { UserProfileDto } from "@/lib/api/types"
 import { MAX_LENGTHS, sanitizeText, validateName, validatePhone } from "@/lib/validation/rules"
+import { flattenFieldErrors, profileUpdateSchema } from "@/lib/validation/schemas"
 
 type EditForm = { firstName: string; lastName: string; phoneNumber: string }
 
@@ -78,27 +79,28 @@ export function ProfileInfoCard() {
 
   async function handleSave(e: FormEvent) {
     e.preventDefault()
+    // Re-entrancy guard: bloquea también un submit disparado por script
+    // directo al <form>, que no respeta el atributo disabled del botón.
+    if (saving) return
     if (!accessToken) return
     setSaveError(null)
 
-    const nextErrors: Partial<Record<keyof EditForm, string>> = {}
-    ;(["firstName", "lastName", "phoneNumber"] as const).forEach((key) => {
-      const message = validateEditField(key, form[key])
-      if (message) nextErrors[key] = message
-    })
-    setFieldErrors(nextErrors)
-    if (Object.keys(nextErrors).length > 0) {
+    // Compuerta final antes de tocar la red — ver lib/validation/schemas.ts.
+    const result = profileUpdateSchema.safeParse(form)
+    if (!result.success) {
+      setFieldErrors(flattenFieldErrors(result.error))
       setSaveError("Revisa los campos marcados antes de continuar.")
       return
     }
+    setFieldErrors({})
 
     setSaving(true)
     try {
       const updated = await updateProfile(
         {
-          firstName: sanitizeText(form.firstName),
-          lastName: sanitizeText(form.lastName),
-          phoneNumber: form.phoneNumber ? sanitizeText(form.phoneNumber) : undefined,
+          firstName: sanitizeText(result.data.firstName),
+          lastName: sanitizeText(result.data.lastName),
+          phoneNumber: result.data.phoneNumber ? sanitizeText(result.data.phoneNumber) : undefined,
         },
         accessToken
       )

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader"
 import { OrganizationsPanel } from "@/components/dashboard/OrganizationsPanel"
 
 export const metadata: Metadata = {
-  title: "Organización | LifeBalance Admin",
+  title: "Organization | LifeBalance Admin",
 }
 
 export default function OrganizationPage() {

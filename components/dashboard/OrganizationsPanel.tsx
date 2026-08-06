@@ -28,6 +28,8 @@ import {
   suspendOrganization,
 } from "@/lib/api/organizations"
 import type { OrganizationDto, OrgPagedResult } from "@/lib/api/organizations-types"
+import { usePlans } from "@/lib/landing/usePlans"
+import { formatPlanPrice, sortPlansForDisplay } from "@/lib/landing/plans"
 import {
   MAX_LENGTHS,
   sanitizeText,
@@ -117,6 +119,7 @@ function StatusBadge({ org }: { org: OrganizationDto }) {
 
 export function OrganizationsPanel() {
   const { accessToken } = useAuth()
+  const { plans, loading: plansLoading, error: plansError } = usePlans()
   const [result, setResult] = useState<OrgPagedResult<OrganizationDto> | null>(null)
   const [pageIndex, setPageIndex] = useState(1)
   const [search, setSearch] = useState("")
@@ -232,6 +235,8 @@ export function OrganizationsPanel() {
   }
 
   const items = result?.items ?? []
+  const orderedPlans = plans ? sortPlansForDisplay(plans) : []
+  const planNameById = new Map(orderedPlans.map((plan) => [plan.id, plan.name]))
 
   return (
     <div className="space-y-6">
@@ -291,17 +296,42 @@ export function OrganizationsPanel() {
               />
             </div>
 
-            <FormField
-              label="Plan"
-              name="planId"
-              placeholder="free / pro / business / enterprise"
-              required
-              maxLength={MAX_LENGTHS.planId}
-              value={form.planId}
-              onChange={(e) => updateField("planId", e.target.value)}
-              onBlur={handleFieldBlur("planId")}
-              error={fieldErrors.planId}
-            />
+            <div>
+              <label htmlFor="planId" className="mb-1.5 block text-sm font-semibold text-emerald-950">
+                Plan
+              </label>
+              <select
+                id="planId"
+                name="planId"
+                required
+                disabled={plansLoading || !!plansError}
+                value={form.planId}
+                onChange={(e) => updateField("planId", e.target.value)}
+                onBlur={handleFieldBlur("planId")}
+                className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-800 outline-none transition-colors focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
+                  fieldErrors.planId
+                    ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                    : "border-emerald-200 focus:border-emerald-400 focus:ring-emerald-100"
+                }`}
+              >
+                <option value="" disabled>
+                  {plansLoading ? "Cargando planes…" : "Selecciona un plan"}
+                </option>
+                {orderedPlans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name} ({formatPlanPrice(plan)}
+                    {plan.isCustomPricing ? "" : "/mes"})
+                  </option>
+                ))}
+              </select>
+              {plansError ? (
+                <p className="mt-1.5 text-xs font-medium text-red-600">
+                  No se pudieron cargar los planes. Recarga la página para intentarlo de nuevo.
+                </p>
+              ) : fieldErrors.planId ? (
+                <p className="mt-1.5 text-xs font-medium text-red-600">{fieldErrors.planId}</p>
+              ) : null}
+            </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <FormField
@@ -438,7 +468,9 @@ export function OrganizationsPanel() {
                     <tr key={id} className="border-b border-gray-50 last:border-0 hover:bg-black/[0.02]">
                       <td className="px-5 py-3 font-semibold text-emerald-900">{org.name ?? "—"}</td>
                       <td className="px-5 py-3 text-slate-500">{org.taxId ?? "—"}</td>
-                      <td className="px-5 py-3 text-slate-500">{org.planId ?? "—"}</td>
+                      <td className="px-5 py-3 text-slate-500">
+                        {(org.planId && planNameById.get(org.planId)) ?? org.planId ?? "—"}
+                      </td>
                       <td className="px-5 py-3">
                         <StatusBadge org={org} />
                       </td>
