@@ -9,10 +9,11 @@ import type {
 /**
  * Cliente para el microservicio Dashboard (docs/DASHBOARD_SERVICE_API.md).
  *
- * ⚠️ Verificado en vivo: el JWT del Auth & Profile service es RECHAZADO aquí
- * ("The audience '(null)' is invalid") — bug/config pendiente del backend.
- * Todo endpoint que exija sesión fallará con 401 hasta que se corrija ahí.
- * `/health` es público y sí funciona.
+ * Verificado en vivo (2026-08-07): el JWT del Auth & Profile service ya es
+ * aceptado aquí — el bug de audience ("The audience '(null)' is invalid")
+ * quedó resuelto en el backend. Mismo día se corrigió también que
+ * `individual/activity` y `individual/statistics` devolvían `sedentaryHours`/
+ * `caloriesBurned` en 0 (ver [[dashboard-sedentary-fix-backend]] en memoria).
  */
 
 export const DASHBOARD_API_BASE_URL =
