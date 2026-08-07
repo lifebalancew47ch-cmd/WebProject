@@ -2,6 +2,7 @@
 
 import { CheckCircle2, CreditCard, Loader2, Plug, XCircle } from "lucide-react"
 import { Card } from "@/components/ui/Card"
+import { Badge } from "@/components/ui/Badge"
 import { usePlans } from "@/lib/landing/usePlans"
 import { useMySubscription } from "@/lib/landing/useMySubscription"
 import { sortPlansForDisplay } from "@/lib/landing/plans"
@@ -21,14 +22,9 @@ const CAPABILITIES: Capability[] = [
 
 function CapabilityBadge({ enabled }: { enabled: boolean }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        enabled ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
-      }`}
-    >
-      {enabled ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+    <Badge tone={enabled ? "success" : "neutral"} icon={enabled ? CheckCircle2 : XCircle}>
       {enabled ? "Habilitado" : "No incluido"}
-    </span>
+    </Badge>
   )
 }
 
@@ -55,7 +51,7 @@ function PlanCapabilitiesCard() {
 
       <div className="mt-4">
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
+          <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500">
             <Loader2 className="h-4 w-4 animate-spin" /> Cargando…
           </div>
         ) : (
@@ -102,7 +98,7 @@ function StripeIntegrationCard() {
 
       <div className="mt-4 space-y-2">
         {orderedPlans.length === 0 ? (
-          <p className="py-2 text-sm text-gray-400">No se pudieron cargar los planes.</p>
+          <p className="py-2 text-sm text-gray-500">No se pudieron cargar los planes.</p>
         ) : (
           orderedPlans.map((plan) => {
             const configured = Boolean(stripeUrls[plan.tier.toLowerCase()])

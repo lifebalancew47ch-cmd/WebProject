@@ -42,9 +42,9 @@ export function FAQAccordion() {
             >
               <span className="text-sm font-semibold text-gray-800">{item.question}</span>
               {isOpen ? (
-                <ChevronUp className="h-4 w-4 shrink-0 text-gray-400" />
+                <ChevronUp className="h-4 w-4 shrink-0 text-gray-500" />
               ) : (
-                <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
               )}
             </button>
             {isOpen ? <p className="mt-3 text-sm leading-relaxed text-gray-600">{item.answer}</p> : null}

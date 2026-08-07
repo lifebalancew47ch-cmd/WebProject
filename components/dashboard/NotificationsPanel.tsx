@@ -177,12 +177,12 @@ export function NotificationsPanel() {
 
       <Card className="overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center gap-3 p-10 text-slate-400">
+          <div className="flex items-center justify-center gap-3 p-10 text-slate-500">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="text-sm font-medium">Cargando notificaciones…</span>
           </div>
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 p-12 text-center text-slate-400">
+          <div className="flex flex-col items-center justify-center gap-2 p-12 text-center text-slate-500">
             <Bell className="h-8 w-8" />
             <p className="text-sm font-medium">No tienes notificaciones todavía.</p>
           </div>
@@ -209,7 +209,7 @@ export function NotificationsPanel() {
                         {n.title}
                       </p>
                       <p className="mt-0.5 text-sm text-slate-500">{n.body}</p>
-                      <p className="mt-1 text-xs text-slate-400">{new Date(n.createdAt).toLocaleString("es-GT")}</p>
+                      <p className="mt-1 text-xs text-slate-500">{new Date(n.createdAt).toLocaleString("es-GT")}</p>
                     </div>
                   </button>
                   <div className="flex shrink-0 items-center gap-1">
@@ -219,7 +219,7 @@ export function NotificationsPanel() {
                       onClick={() => handleAction(n.id, "favorite")}
                       title="Favorito"
                       className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-amber-50 hover:text-amber-600 disabled:opacity-40 ${
-                        n.isFavorite ? "text-amber-500" : "text-slate-400"
+                        n.isFavorite ? "text-amber-500" : "text-slate-500"
                       }`}
                     >
                       <Star className="h-4 w-4" fill={n.isFavorite ? "currentColor" : "none"} />
@@ -229,7 +229,7 @@ export function NotificationsPanel() {
                       disabled={busy}
                       onClick={() => handleAction(n.id, "archive")}
                       title="Archivar"
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-sky-50 hover:text-sky-700 disabled:opacity-40"
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-sky-50 hover:text-sky-700 disabled:opacity-40"
                     >
                       <Archive className="h-4 w-4" />
                     </button>
@@ -238,7 +238,7 @@ export function NotificationsPanel() {
                       disabled={busy}
                       onClick={() => handleAction(n.id, "delete")}
                       title="Eliminar"
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

@@ -27,7 +27,7 @@ export function Footer() {
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Products</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Products</p>
             <ul className="space-y-3">
               {productLinks.map((link) => (
                 <li key={link.label}>
@@ -45,7 +45,7 @@ export function Footer() {
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Compañía</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Compañía</p>
             <ul className="space-y-3">
               {companyLinks.map((label) => (
                 <li key={label}>
@@ -59,7 +59,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-emerald-100/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-slate-400">© 2026 LifeBalance Tech S.A. Todos los derechos reservados.</p>
+          <p className="text-sm text-slate-500">© 2026 LifeBalance Tech S.A. Todos los derechos reservados.</p>
 
           <div className="flex items-center gap-6">
             <button

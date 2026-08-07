@@ -37,7 +37,7 @@ export function OverviewCTA() {
         </a>
       </div>
 
-      <p className="mt-12 text-center text-[10px] text-gray-400">
+      <p className="mt-12 text-center text-[10px] text-gray-500">
         © 2026 LifeBalance Watch Enterprise. Todos los derechos reservados. | Privacidad | Términos.
       </p>
 

@@ -67,6 +67,7 @@ export function HeroSection() {
                 ref={videoRef}
                 className="absolute inset-0 h-full w-full object-cover"
                 src="/videos/VideoExplicativo_LifeBalance.mp4"
+                poster="/videos/hero-poster.jpg"
                 loop
                 muted={!isPlaying}
                 controls={isPlaying}

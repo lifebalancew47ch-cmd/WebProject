@@ -45,7 +45,7 @@ function MetricCard({
       <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: "#E2EFE7" }}>
         <Icon className="h-4 w-4" strokeWidth={2} style={{ color: "#2D5A43" }} />
       </div>
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</p>
       <p className="mt-1 text-2xl font-extrabold" style={{ color: "#1E3E2B" }}>
         {value}
       </p>
@@ -134,7 +134,7 @@ export function LiveMetricsPanel() {
         </div>
 
         {status === "success" && (
-          <div className="flex items-center gap-2 text-xs text-gray-400">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
             {isRefreshing ? (
               <span className="flex items-center gap-1.5">
                 <Loader2 className="h-3 w-3 animate-spin" /> Actualizando…
@@ -147,7 +147,7 @@ export function LiveMetricsPanel() {
               onClick={() => load({ silent: true })}
               disabled={isRefreshing}
               aria-label="Actualizar panel"
-              className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#2D5A43] disabled:opacity-50"
+              className="rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#2D5A43] disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
             </button>
@@ -163,7 +163,7 @@ export function LiveMetricsPanel() {
       )}
 
       {status === "loading" ? (
-        <div className="flex items-center justify-center gap-3 rounded-3xl bg-[#F0F3F9] p-10 text-gray-400">
+        <div className="flex items-center justify-center gap-3 rounded-3xl bg-[#F0F3F9] p-10 text-gray-500">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span className="text-sm font-medium">Cargando datos en vivo…</span>
         </div>
@@ -219,7 +219,7 @@ export function LiveMetricsPanel() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-gray-400">Sin recomendaciones por ahora.</p>
+                <p className="text-sm text-gray-500">Sin recomendaciones por ahora.</p>
               )}
             </div>
 
@@ -240,7 +240,7 @@ export function LiveMetricsPanel() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-gray-400">Sin notificaciones recientes.</p>
+                <p className="text-sm text-gray-500">Sin notificaciones recientes.</p>
               )}
             </div>
           </div>

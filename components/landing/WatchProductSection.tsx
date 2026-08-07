@@ -138,7 +138,7 @@ function ProductCard({ product }: { product: Product }) {
         >
           Comprar en {product.storeName} <ExternalLink className="h-4 w-4" />
         </a>
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-500">
           Se abre en una pestaña nueva. La compra se procesa directamente en {product.storeName}.
         </p>
       </div>

@@ -103,7 +103,7 @@ export function PreferencesCard() {
 
   if (status === "loading") {
     return (
-      <div className="flex items-center justify-center gap-3 rounded-3xl bg-[#F0F3F9] p-10 text-gray-400">
+      <div className="flex items-center justify-center gap-3 rounded-3xl bg-[#F0F3F9] p-10 text-gray-500">
         <Loader2 className="h-5 w-5 animate-spin" />
         <span className="text-sm font-medium">Cargando preferencias…</span>
       </div>

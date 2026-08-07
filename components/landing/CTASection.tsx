@@ -19,7 +19,7 @@ export function CTASection() {
           >
             Solicitar Demo Gratuita
           </Link>
-          <span className="text-sm text-slate-400">No se requiere tarjeta de crédito</span>
+          <span className="text-sm text-slate-500">No se requiere tarjeta de crédito</span>
         </div>
       </div>
     </section>

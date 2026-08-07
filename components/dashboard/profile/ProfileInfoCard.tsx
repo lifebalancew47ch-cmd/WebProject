@@ -127,7 +127,7 @@ export function ProfileInfoCard() {
 
   if (status === "loading") {
     return (
-      <div className="flex items-center justify-center gap-3 rounded-3xl bg-[#F0F3F9] p-10 text-gray-400">
+      <div className="flex items-center justify-center gap-3 rounded-3xl bg-[#F0F3F9] p-10 text-gray-500">
         <Loader2 className="h-5 w-5 animate-spin" />
         <span className="text-sm font-medium">Cargando perfil…</span>
       </div>
@@ -253,30 +253,30 @@ export function ProfileInfoCard() {
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 border-t border-gray-100 pt-6 sm:grid-cols-2">
           <div className="flex items-center gap-3">
-            <Mail className="h-4 w-4 text-gray-400" />
+            <Mail className="h-4 w-4 text-gray-500" />
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Correo</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Correo</p>
               <p className="text-sm text-gray-700">{profile.email}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Phone className="h-4 w-4 text-gray-400" />
+            <Phone className="h-4 w-4 text-gray-500" />
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Teléfono</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Teléfono</p>
               <p className="text-sm text-gray-700">{profile.phoneNumber || "—"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Calendar className="h-4 w-4 text-gray-400" />
+            <Calendar className="h-4 w-4 text-gray-500" />
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Miembro desde</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Miembro desde</p>
               <p className="text-sm text-gray-700">{formatDate(profile.createdAt)}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Clock className="h-4 w-4 text-gray-400" />
+            <Clock className="h-4 w-4 text-gray-500" />
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Último acceso</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Último acceso</p>
               <p className="text-sm text-gray-700">{formatDate(profile.lastLoginAt)}</p>
             </div>
           </div>

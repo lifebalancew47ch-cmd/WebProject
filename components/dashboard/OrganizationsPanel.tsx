@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { Card } from "@/components/ui/Card"
+import { Badge } from "@/components/ui/Badge"
 import { FormField } from "@/components/ui/FormField"
 import { SubmitButton } from "@/components/ui/SubmitButton"
 import { AlertMessage } from "@/components/ui/AlertMessage"
@@ -106,15 +107,7 @@ const REQUIRED_ORG_FIELDS: (keyof OrgForm)[] = ["name", "taxId", "planId", "zipC
 function StatusBadge({ org }: { org: OrganizationDto }) {
   const status = org.status ?? "Activa"
   const isSuspended = /suspend/i.test(status)
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        isSuspended ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-      }`}
-    >
-      {status}
-    </span>
-  )
+  return <Badge tone={isSuspended ? "warning" : "success"}>{status}</Badge>
 }
 
 export function OrganizationsPanel() {
@@ -249,7 +242,7 @@ export function OrganizationsPanel() {
           }}
           className="relative flex-1 min-w-[220px] max-w-md"
         >
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -438,12 +431,12 @@ export function OrganizationsPanel() {
 
       <Card className="overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center gap-3 p-10 text-slate-400">
+          <div className="flex items-center justify-center gap-3 p-10 text-slate-500">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="text-sm font-medium">Cargando organizaciones…</span>
           </div>
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 p-12 text-center text-slate-400">
+          <div className="flex flex-col items-center justify-center gap-2 p-12 text-center text-slate-500">
             <Building2 className="h-8 w-8" />
             <p className="text-sm font-medium">No hay organizaciones para mostrar.</p>
           </div>
@@ -451,7 +444,7 @@ export function OrganizationsPanel() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <tr className="border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <th className="px-5 py-3">Organización</th>
                   <th className="px-5 py-3">Tax ID</th>
                   <th className="px-5 py-3">Plan</th>
@@ -482,7 +475,7 @@ export function OrganizationsPanel() {
                               disabled={busy || !org.id}
                               onClick={() => org.id && handleRowAction(org.id, "activate")}
                               title="Activar"
-                              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-40"
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-40"
                             >
                               <Play className="h-4 w-4" />
                             </button>
@@ -492,7 +485,7 @@ export function OrganizationsPanel() {
                               disabled={busy || !org.id}
                               onClick={() => org.id && handleRowAction(org.id, "suspend")}
                               title="Suspender"
-                              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-amber-50 hover:text-amber-700 disabled:opacity-40"
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-amber-50 hover:text-amber-700 disabled:opacity-40"
                             >
                               <Pause className="h-4 w-4" />
                             </button>
@@ -502,7 +495,7 @@ export function OrganizationsPanel() {
                             disabled={busy || !org.id}
                             onClick={() => org.id && handleRowAction(org.id, "restore")}
                             title="Restaurar"
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-sky-50 hover:text-sky-700 disabled:opacity-40"
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-sky-50 hover:text-sky-700 disabled:opacity-40"
                           >
                             <RotateCcw className="h-4 w-4" />
                           </button>
@@ -511,7 +504,7 @@ export function OrganizationsPanel() {
                             disabled={busy || !org.id}
                             onClick={() => org.id && handleRowAction(org.id, "delete")}
                             title="Eliminar"
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -535,7 +528,7 @@ export function OrganizationsPanel() {
                 type="button"
                 disabled={!result.hasPreviousPage}
                 onClick={() => setPageIndex((p) => Math.max(1, p - 1))}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-black/5 hover:text-emerald-700 disabled:opacity-30"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-black/5 hover:text-emerald-700 disabled:opacity-30"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -543,7 +536,7 @@ export function OrganizationsPanel() {
                 type="button"
                 disabled={!result.hasNextPage}
                 onClick={() => setPageIndex((p) => p + 1)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-black/5 hover:text-emerald-700 disabled:opacity-30"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-black/5 hover:text-emerald-700 disabled:opacity-30"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

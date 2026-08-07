@@ -15,7 +15,7 @@ function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
       <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: "#E2EFE7" }}>
         <Icon className="h-4 w-4" strokeWidth={2} style={{ color: "#2D5A43" }} />
       </div>
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</p>
       <p className="mt-1 text-2xl font-extrabold" style={{ color: "#1E3E2B" }}>
         {value}
       </p>
@@ -42,7 +42,7 @@ function HeatmapChart({ hourlyHeatmap }: { hourlyHeatmap: number[] }) {
           </div>
         ))}
       </div>
-      <div className="mt-2 flex justify-between text-[10px] text-gray-400">
+      <div className="mt-2 flex justify-between text-[10px] text-gray-500">
         <span>00h</span>
         <span>06h</span>
         <span>12h</span>
@@ -84,7 +84,7 @@ export function AnalyticsPanel() {
 
   if (status === "loading") {
     return (
-      <div className="flex items-center justify-center gap-3 rounded-3xl bg-[#F0F3F9] p-10 text-gray-400">
+      <div className="flex items-center justify-center gap-3 rounded-3xl bg-[#F0F3F9] p-10 text-gray-500">
         <Loader2 className="h-5 w-5 animate-spin" />
         <span className="text-sm font-medium">Cargando analítica…</span>
       </div>
