@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { History, Loader2, ShieldAlert, ShieldQuestion } from "lucide-react"
 import { Card } from "@/components/ui/Card"
+import { Badge } from "@/components/ui/Badge"
 import { AlertMessage } from "@/components/ui/AlertMessage"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { getLoginHistory, getSecurityEvents } from "@/lib/api/auth"
@@ -24,7 +25,7 @@ function formatDate(value: string) {
  */
 function AdminOnlyNotice() {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-400">
+    <div className="flex items-center gap-2 rounded-xl border border-dashed border-gray-200 p-6 text-sm text-gray-500">
       <ShieldAlert className="h-4 w-4 shrink-0" />
       Esta información requiere permisos de administrador.
     </div>
@@ -33,7 +34,7 @@ function AdminOnlyNotice() {
 
 function EmptyNotice({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 py-6 text-sm text-gray-400">
+    <div className="flex items-center gap-2 py-6 text-sm text-gray-500">
       <ShieldQuestion className="h-4 w-4 shrink-0" />
       {children}
     </div>
@@ -79,7 +80,7 @@ function LoginHistorySection() {
 
       <div className="mt-4">
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
+          <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500">
             <Loader2 className="h-4 w-4 animate-spin" /> Cargando…
           </div>
         ) : forbidden ? (
@@ -92,7 +93,7 @@ function LoginHistorySection() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <tr className="border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <th className="px-3 py-2">Fecha</th>
                   <th className="px-3 py-2">Dispositivo</th>
                   <th className="px-3 py-2">IP</th>
@@ -106,13 +107,9 @@ function LoginHistorySection() {
                     <td className="px-3 py-2.5 text-slate-600">{item.device ?? item.userAgent ?? "—"}</td>
                     <td className="px-3 py-2.5 text-slate-500">{item.ipAddress ?? "—"}</td>
                     <td className="px-3 py-2.5">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          item.success ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
-                        }`}
-                      >
+                      <Badge tone={item.success ? "success" : "danger"}>
                         {item.success ? "Exitoso" : item.failureReason || "Fallido"}
-                      </span>
+                      </Badge>
                     </td>
                   </tr>
                 ))}
@@ -164,7 +161,7 @@ function SecurityEventsSection() {
 
       <div className="mt-4">
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
+          <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500">
             <Loader2 className="h-4 w-4 animate-spin" /> Cargando…
           </div>
         ) : forbidden ? (
@@ -177,7 +174,7 @@ function SecurityEventsSection() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <tr className="border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <th className="px-3 py-2">Fecha</th>
                   <th className="px-3 py-2">Acción</th>
                   <th className="px-3 py-2">Recurso</th>
@@ -191,13 +188,9 @@ function SecurityEventsSection() {
                     <td className="px-3 py-2.5 font-medium text-emerald-900">{item.action ?? "—"}</td>
                     <td className="px-3 py-2.5 text-slate-500">{item.resourceType ?? "—"}</td>
                     <td className="px-3 py-2.5">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          item.success ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
-                        }`}
-                      >
+                      <Badge tone={item.success ? "success" : "danger"}>
                         {item.success ? "Exitoso" : item.errorMessage || "Fallido"}
-                      </span>
+                      </Badge>
                     </td>
                   </tr>
                 ))}

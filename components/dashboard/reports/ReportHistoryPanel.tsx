@@ -45,7 +45,7 @@ export function ReportHistoryPanel() {
 
       <Card className="overflow-hidden">
         {status === "loading" ? (
-          <div className="flex items-center justify-center gap-3 p-10 text-slate-400">
+          <div className="flex items-center justify-center gap-3 p-10 text-slate-500">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="text-sm font-medium">Cargando historial…</span>
           </div>
@@ -66,7 +66,7 @@ export function ReportHistoryPanel() {
             </button>
           </div>
         ) : (result?.items.length ?? 0) === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 p-12 text-center text-slate-400">
+          <div className="flex flex-col items-center justify-center gap-2 p-12 text-center text-slate-500">
             <FileText className="h-8 w-8" />
             <p className="text-sm font-medium">No hay reportes generados todavía.</p>
           </div>
@@ -76,7 +76,7 @@ export function ReportHistoryPanel() {
               <li key={item.id ?? idx} className="flex items-center justify-between gap-4 px-5 py-4">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-700">{item.scope ?? "—"}</p>
-                  <p className="mt-0.5 text-xs text-slate-400">{item.generatedAt ?? "—"}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{item.generatedAt ?? "—"}</p>
                 </div>
                 <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
                   {item.format ?? "—"}

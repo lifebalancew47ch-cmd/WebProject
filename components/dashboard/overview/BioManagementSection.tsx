@@ -58,7 +58,7 @@ export function BioManagementSection() {
 
             <Heart className="h-7 w-7 text-[#30E398] mb-2" fill="#30E398" strokeWidth={1.5} />
             <span className="text-5xl font-extrabold text-[#1E3E2B]">98%</span>
-            <span className="mt-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <span className="mt-1 text-xs font-semibold uppercase tracking-wider text-gray-500">
               Precisión Predictiva
             </span>
 

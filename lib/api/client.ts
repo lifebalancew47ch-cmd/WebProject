@@ -218,3 +218,78 @@ export async function apiFetch<T>(
 ): Promise<T> {
   return jsonFetch<T>(AUTH_API_BASE_URL, path, options, token)
 }
+
+export interface BlobResult {
+  blob: Blob
+  filename: string | null
+}
+
+function parseFilenameFromDisposition(disposition: string | null): string | null {
+  if (!disposition) return null
+  // RFC 5987: filename*=UTF-8''nombre%20codificado (prioridad sobre filename= plano)
+  const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(disposition)
+  if (utf8Match) {
+    try {
+      return decodeURIComponent(utf8Match[1])
+    } catch {
+      return utf8Match[1]
+    }
+  }
+  const plainMatch = /filename="?([^";]+)"?/i.exec(disposition)
+  return plainMatch ? plainMatch[1] : null
+}
+
+/**
+ * Variante de `jsonFetch` para endpoints que devuelven un archivo binario
+ * (p. ej. `/reports/export`, que responde `Content-Type: application/pdf` o
+ * `text/csv` con `Content-Disposition: attachment`), no el envelope JSON.
+ * Comparte el mismo refresh-on-401 y extracción de errores que `jsonFetch`:
+ * si la petición falla, el backend sigue devolviendo JSON (`ApiResponse` o
+ * `ProblemDetails`), así que el body de error sí se intenta parsear.
+ */
+export async function blobFetch(
+  baseUrl: string,
+  path: string,
+  options: RequestInit = {},
+  token?: string | null,
+  _isRetry: boolean = false
+): Promise<BlobResult> {
+  let res: Response
+  try {
+    res = await fetch(`${baseUrl}${path}`, {
+      ...options,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    })
+  } catch {
+    throw new ApiError("No se pudo conectar con el servidor. Intenta de nuevo.", 0)
+  }
+
+  if (!res.ok) {
+    if (res.status === 401 && token && !_isRetry) {
+      const newToken = await refreshAccessToken()
+      if (newToken) {
+        return blobFetch(baseUrl, path, options, newToken, true)
+      }
+      clearSession()
+      sessionListener.onExpired?.()
+    }
+    const text = await res.text()
+    let body: unknown = null
+    if (text) {
+      try {
+        body = JSON.parse(text)
+      } catch {
+        // Body de error no-JSON (HTML de proxy/CDN, etc.) -> extractErrorMessage
+        // cae a su mensaje genérico porque `body` queda `null`.
+      }
+    }
+    throw extractErrorMessage(res.status, body)
+  }
+
+  const blob = await res.blob()
+  const filename = parseFilenameFromDisposition(res.headers.get("Content-Disposition"))
+  return { blob, filename }
+}

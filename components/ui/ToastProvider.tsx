@@ -43,7 +43,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            role="status"
+            role={toast.type === "error" ? "alert" : "status"}
+            aria-live={toast.type === "error" ? "assertive" : "polite"}
             className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border bg-white p-4 shadow-lg transition-all ${
               toast.type === "error" ? "border-red-200" : "border-emerald-200"
             }`}
@@ -58,7 +59,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => dismiss(toast.id)}
               aria-label="Cerrar notificación"
-              className="shrink-0 text-slate-400 transition-colors hover:text-slate-600"
+              className="shrink-0 text-slate-500 transition-colors hover:text-slate-600"
             >
               <X className="h-4 w-4" />
             </button>

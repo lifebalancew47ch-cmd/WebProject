@@ -12,6 +12,17 @@ import { ApiError } from "@/lib/api/client"
 import type { ReportFormat, ReportScope } from "@/lib/api/reporting-types"
 import { MAX_LENGTHS, sanitizeText, validateBoundedText, validateRequired } from "@/lib/validation/rules"
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
 function SelectField({
   label,
   value,
@@ -66,7 +77,8 @@ export function ReportGeneratorCard() {
 
     setLoading(true)
     try {
-      await exportReport({ scope, format, metrics: sanitizeText(metrics) }, accessToken)
+      const file = await exportReport({ scope, format, metrics: sanitizeText(metrics) }, accessToken)
+      downloadBlob(file.blob, file.filename ?? `reporte-${scope}.${format}`)
       setSuccess(true)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo generar el reporte.")
@@ -83,7 +95,7 @@ export function ReportGeneratorCard() {
       <p className="mt-1 text-xs text-gray-500">Exporta un reporte con las métricas que necesites.</p>
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-4" noValidate>
-        {success ? <AlertMessage type="success">Reporte generado correctamente.</AlertMessage> : null}
+        {success ? <AlertMessage type="success">Reporte generado y descargado correctamente.</AlertMessage> : null}
         {error ? <AlertMessage type="error">{error}</AlertMessage> : null}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

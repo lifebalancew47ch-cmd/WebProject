@@ -53,7 +53,7 @@ export function SidebarUser() {
           onClick={handleLogout}
           aria-label="Cerrar sesión"
           title="Cerrar sesión"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
         >
           <LogOut className="h-4 w-4" strokeWidth={2} />
         </button>

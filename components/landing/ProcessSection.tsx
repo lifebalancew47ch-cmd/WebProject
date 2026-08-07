@@ -62,7 +62,7 @@ export function ProcessSection() {
           <div className="space-y-10">
             {steps.map((step) => (
               <div key={step.number} className="flex gap-5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-400">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-500">
                   {step.number}
                 </div>
                 <div>

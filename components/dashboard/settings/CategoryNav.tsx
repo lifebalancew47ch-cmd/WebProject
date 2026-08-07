@@ -10,7 +10,7 @@ type CategoryNavProps = {
 export function CategoryNav({ active, onSelect }: CategoryNavProps) {
   return (
     <div className="w-full md:w-64 shrink-0">
-      <span className="mb-3 block text-xs font-bold tracking-wider text-gray-400">CATEGORÍAS</span>
+      <span className="mb-3 block text-xs font-bold tracking-wider text-gray-500">CATEGORÍAS</span>
       <div className="flex flex-col gap-3">
         {categories.map((category) => {
           const isActive = category === active

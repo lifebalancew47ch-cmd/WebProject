@@ -28,7 +28,7 @@ export function Sidebar() {
           type="button"
           onClick={close}
           aria-label="Cerrar menú"
-          className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-black/5 lg:hidden"
+          className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-black/5 lg:hidden"
         >
           <X className="h-4 w-4" />
         </button>

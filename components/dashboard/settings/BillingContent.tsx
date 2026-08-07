@@ -145,7 +145,7 @@ export function BillingContent() {
                       {formatPlanPrice(plan)}
                     </span>
                     {!plan.isCustomPricing && (
-                      <span className={plan.isHighlighted ? "text-white/60" : "text-gray-400"}> /mes</span>
+                      <span className={plan.isHighlighted ? "text-white/60" : "text-gray-500"}> /mes</span>
                     )}
                   </p>
                   <ul className="mt-4 flex-1 space-y-2.5">
@@ -169,7 +169,7 @@ export function BillingContent() {
                       disabled={isCurrent}
                       className={
                         isCurrent
-                          ? "mt-6 w-full rounded-full border border-gray-200 py-2.5 text-sm font-bold text-gray-400"
+                          ? "mt-6 w-full rounded-full border border-gray-200 py-2.5 text-sm font-bold text-gray-500"
                           : plan.isHighlighted
                             ? "mt-6 w-full rounded-full bg-white py-2.5 text-sm font-bold text-[#2D5A43] transition-colors hover:bg-white/90"
                             : "mt-6 w-full rounded-full border border-gray-200 py-2.5 text-sm font-bold text-[#2D5A43] transition-colors hover:bg-gray-50"

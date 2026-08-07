@@ -30,3 +30,8 @@ export interface ExportReportParams {
   to?: string
   metrics: string
 }
+
+export interface ExportedReportFile {
+  blob: Blob
+  filename: string | null
+}

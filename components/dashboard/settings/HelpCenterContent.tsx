@@ -22,7 +22,7 @@ export function HelpCenterContent() {
       ) : activeCategory === "Seguridad" ? (
         <SecurityContent />
       ) : (
-        <div className="flex-1 rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-400">
+        <div className="flex-1 rounded-xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-500">
           Aún no hay contenido de ayuda para &ldquo;{activeCategory}&rdquo;.
         </div>
       )}
