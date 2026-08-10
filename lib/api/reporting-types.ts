@@ -28,7 +28,7 @@ export interface ExportReportParams {
   format: ReportFormat
   from?: string
   to?: string
-  metrics: string
+  metrics: string[]
 }
 
 export interface ExportedReportFile {

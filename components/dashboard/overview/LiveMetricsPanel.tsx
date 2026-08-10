@@ -1,26 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import {
-  AlertTriangle,
-  Flame,
-  Footprints,
-  HeartPulse,
-  Loader2,
-  RefreshCw,
-  Sparkles,
-  Trophy,
-  type LucideIcon,
-} from "lucide-react"
-import { useAuth } from "@/lib/auth/AuthContext"
-import { getIndividualDashboard } from "@/lib/api/dashboard"
-import { ApiError } from "@/lib/api/client"
-import type { IndividualDashboardResponse } from "@/lib/api/dashboard-types"
-
-type Status = "loading" | "success" | "error"
-
-// Cada cuánto se refresca el panel en segundo plano mientras la pestaña está visible.
-const REFRESH_INTERVAL_MS = 30_000
+import { useEffect, useState } from "react"
+import { AlertTriangle, Flame, Footprints, HeartPulse, Loader2, RefreshCw, Sparkles, Trophy, type LucideIcon } from "lucide-react"
+import { useIndividualDashboard } from "@/lib/dashboard/useIndividualDashboard"
 
 function timeAgoLabel(date: Date | null): string {
   if (!date) return ""
@@ -54,68 +36,9 @@ function MetricCard({
 }
 
 export function LiveMetricsPanel() {
-  const { user, accessToken } = useAuth()
-  const [status, setStatus] = useState<Status>("loading")
-  const [data, setData] = useState<IndividualDashboardResponse | null>(null)
-  const [error, setError] = useState<{ message: string; status: number } | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-  // Fuerza un re-render periódico solo para refrescar el texto "hace Xs".
-  const [, setTick] = useState(0)
-  const hasDataRef = useRef(false)
-
-  const load = useCallback(
-    async (opts: { silent?: boolean } = {}) => {
-      if (!user?.id || !accessToken) return
-      // Refresco en segundo plano: no se reemplaza la vista por un spinner de
-      // pantalla completa si ya hay datos previos — solo un indicador sutil.
-      if (opts.silent && hasDataRef.current) {
-        setIsRefreshing(true)
-      } else {
-        setStatus("loading")
-      }
-      try {
-        const result = await getIndividualDashboard(user.id, accessToken)
-        setData(result)
-        setError(null)
-        setStatus("success")
-        setLastUpdated(new Date())
-        hasDataRef.current = true
-      } catch (err) {
-        const apiErr = err instanceof ApiError ? err : null
-        const nextError = { message: apiErr?.message ?? "No se pudo cargar el panel.", status: apiErr?.status ?? 0 }
-        // Si ya teníamos datos en pantalla, un refresco fallido no debe borrarlos:
-        // se conserva la última información válida y solo se registra el error.
-        if (!hasDataRef.current) {
-          setStatus("error")
-        }
-        setError(nextError)
-      } finally {
-        setIsRefreshing(false)
-      }
-    },
-    [user?.id, accessToken]
-  )
-
-  // Carga inicial + auto-refresco mientras la pestaña esté visible ("EN VIVO" real).
-  useEffect(() => {
-    load()
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") load({ silent: true })
-    }, REFRESH_INTERVAL_MS)
-
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") load({ silent: true })
-    }
-    document.addEventListener("visibilitychange", onVisibilityChange)
-
-    return () => {
-      clearInterval(interval)
-      document.removeEventListener("visibilitychange", onVisibilityChange)
-    }
-  }, [load])
-
+  const { data, status, error, isRefreshing, lastUpdated, reload } = useIndividualDashboard()
   // Refresca el texto relativo ("hace 30s") sin volver a llamar al API.
+  const [, setTick] = useState(0)
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 5_000)
     return () => clearInterval(id)
@@ -144,7 +67,7 @@ export function LiveMetricsPanel() {
             )}
             <button
               type="button"
-              onClick={() => load({ silent: true })}
+              onClick={() => reload({ silent: true })}
               disabled={isRefreshing}
               aria-label="Actualizar panel"
               className="rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#2D5A43] disabled:opacity-50"
@@ -181,7 +104,7 @@ export function LiveMetricsPanel() {
           </p>
           <button
             type="button"
-            onClick={() => load()}
+            onClick={() => reload()}
             className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold transition-colors hover:bg-gray-50"
             style={{ color: "#2D5A43" }}
           >
@@ -191,7 +114,13 @@ export function LiveMetricsPanel() {
       ) : data ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard icon={HeartPulse} label="Ritmo cardíaco" value={`${Math.round(data.biometrics?.heartRate ?? 0)} lpm`} />
+            <MetricCard
+              icon={HeartPulse}
+              label="Ritmo cardíaco"
+              // El backend devuelve heartRate: 0 (con recordedAt "actual") cuando no
+              // hay ninguna lectura real todavía — verificado en vivo el 2026-08-07.
+              value={data.biometrics?.heartRate ? `${Math.round(data.biometrics.heartRate)} lpm` : "Sin lectura"}
+            />
             <MetricCard icon={Footprints} label="Pasos hoy" value={(data.activity?.dailySteps ?? 0).toLocaleString()} />
             <MetricCard icon={Flame} label="Calorías" value={`${Math.round(data.activity?.caloriesBurned ?? 0)} kcal`} />
             <MetricCard
