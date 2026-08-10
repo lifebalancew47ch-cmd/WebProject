@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react"
 import {
-  Activity,
   AlertTriangle,
   Armchair,
   Award,
@@ -37,9 +36,6 @@ type Status = "loading" | "success" | "error"
  * por eso el valor y el % siempre van en texto (leyenda), nunca solo el
  * color del segmento.
  */
-const ACTIVE_COLOR = "#1baf7a"
-const SEDENTARY_COLOR = "#eb6834"
-
 /** Status palette de la skill dataviz — fijo, reservado para severidad. */
 const STATUS_COLOR = { good: "#0ca30c", warning: "#fab219", critical: "#d03b3b" } as const
 type Tone = keyof typeof STATUS_COLOR
@@ -126,35 +122,44 @@ function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
   )
 }
 
-function HeatmapChart({ hourlyHeatmap }: { hourlyHeatmap: number[] }) {
+/**
+ * Mapa de calor real: celdas coloreadas por intensidad (escala secuencial
+ * de un solo hue, ver color-formula.md — "sequential = one hue, light→dark"),
+ * no barras. 24 valores reales de `getIndividualHeatmap`.
+ */
+function HeatmapGrid({ hourlyHeatmap }: { hourlyHeatmap: number[] }) {
   const max = Math.max(1, ...hourlyHeatmap)
   return (
     <div className="rounded-2xl bg-white p-6">
       <h3 className="text-sm font-bold" style={{ color: "#1E3E2B" }}>
-        Actividad por hora
+        Mapa de calor · Actividad por hora
       </h3>
-      <p className="mt-1 text-xs text-gray-500">Distribución de actividad a lo largo de las últimas 24 horas.</p>
-      <div className="mt-6 flex h-32 items-end gap-1.5">
-        {hourlyHeatmap.map((value, hour) => (
-          <div key={hour} className="group relative flex-1">
-            {/* Tooltip por barra: aparece en hover y en foco de teclado (el
-                mismo dato que ya lleva el `title` nativo, reforzado). */}
-            <div
-              role="tooltip"
-              className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-semibold text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
-              style={{ backgroundColor: "#1E3E2B" }}
-            >
-              {hour}:00 · {value}
+      <p className="mt-1 text-xs text-gray-500">Intensidad de actividad en cada una de las últimas 24 horas.</p>
+
+      <div className="mt-6 grid grid-cols-12 gap-1.5 sm:grid-cols-[repeat(24,minmax(0,1fr))]">
+        {hourlyHeatmap.map((value, hour) => {
+          const intensity = max > 0 ? value / max : 0
+          return (
+            <div key={hour} className="group relative aspect-square">
+              {/* Tooltip por celda: hover y foco de teclado */}
+              <div
+                role="tooltip"
+                className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-semibold text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+                style={{ backgroundColor: "#1E3E2B" }}
+              >
+                {hour}:00 · {value}
+              </div>
+              <div
+                tabIndex={0}
+                aria-label={`${hour}:00 — ${value}`}
+                className="h-full w-full cursor-default rounded-md outline-none transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-emerald-400"
+                style={{ backgroundColor: `rgba(45,90,67,${0.08 + intensity * 0.82})` }}
+              />
             </div>
-            <div
-              tabIndex={0}
-              aria-label={`${hour}:00 — ${value}`}
-              className="w-full cursor-default rounded-t-md bg-gradient-to-t from-[#2D5A43] to-[#30E398] outline-none transition-all focus-visible:ring-2 focus-visible:ring-emerald-400"
-              style={{ height: `${Math.max(4, (value / max) * 100)}%` }}
-            />
-          </div>
-        ))}
+          )
+        })}
       </div>
+
       <div className="mt-2 flex justify-between text-[10px] text-gray-500">
         <span>00h</span>
         <span>06h</span>
@@ -162,67 +167,15 @@ function HeatmapChart({ hourlyHeatmap }: { hourlyHeatmap: number[] }) {
         <span>18h</span>
         <span>23h</span>
       </div>
-    </div>
-  )
-}
 
-/**
- * Parte-a-todo (Activo vs Sedentario esta semana): barra horizontal
- * apilada de 2 segmentos, no dona — "A single ratio... not a pie of 2
- * slices" (ver choosing-a-form.md). Leyenda con valores en texto (nunca
- * solo color) por el WARN de contraste del verde sobre blanco.
- */
-function WeeklyBalanceBar({ activeHours, sedentaryHours }: { activeHours: number; sedentaryHours: number }) {
-  const total = activeHours + sedentaryHours
-  const activePct = total > 0 ? (activeHours / total) * 100 : 0
-  const sedentaryPct = total > 0 ? 100 - activePct : 0
-
-  return (
-    <div className="rounded-2xl bg-white p-6">
-      <h3 className="text-sm font-bold" style={{ color: "#1E3E2B" }}>
-        Balance semanal
-      </h3>
-      <p className="mt-1 text-xs text-gray-500">Horas activas vs. sedentarias reportadas esta semana.</p>
-
-      {/* Leyenda con valores directos: nunca depende solo del color del segmento. */}
-      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-        <span className="inline-flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: ACTIVE_COLOR }} />
-          <span className="text-gray-700">
-            Activo — <strong style={{ color: "#1E3E2B" }}>{activeHours.toFixed(1)} h</strong>{" "}
-            <span className="text-gray-500">({activePct.toFixed(0)}%)</span>
-          </span>
-        </span>
-        <span className="inline-flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: SEDENTARY_COLOR }} />
-          <span className="text-gray-700">
-            Sedentario — <strong style={{ color: "#1E3E2B" }}>{sedentaryHours.toFixed(1)} h</strong>{" "}
-            <span className="text-gray-500">({sedentaryPct.toFixed(0)}%)</span>
-          </span>
-        </span>
-      </div>
-
-      <div className="mt-4 flex h-5 w-full overflow-hidden rounded-full bg-gray-100">
-        {total <= 0 ? (
-          <div className="flex w-full items-center justify-center text-[10px] font-medium text-gray-500">
-            Sin datos esta semana
-          </div>
-        ) : (
-          <>
-            <div
-              tabIndex={0}
-              aria-label={`Activo: ${activeHours.toFixed(1)} horas, ${activePct.toFixed(0)} por ciento`}
-              className="h-full outline-none transition-all focus-visible:ring-2 focus-visible:ring-emerald-400"
-              style={{ width: `${activePct}%`, backgroundColor: ACTIVE_COLOR, marginRight: sedentaryPct > 0 ? 2 : 0 }}
-            />
-            <div
-              tabIndex={0}
-              aria-label={`Sedentario: ${sedentaryHours.toFixed(1)} horas, ${sedentaryPct.toFixed(0)} por ciento`}
-              className="h-full flex-1 outline-none transition-all focus-visible:ring-2 focus-visible:ring-emerald-400"
-              style={{ backgroundColor: SEDENTARY_COLOR }}
-            />
-          </>
-        )}
+      {/* Leyenda de la escala — nunca solo color, siempre con texto a los extremos. */}
+      <div className="mt-4 flex items-center gap-2 text-[11px] text-gray-500">
+        <span>Menos activo</span>
+        <div
+          className="h-2 flex-1 rounded-full"
+          style={{ background: "linear-gradient(to right, rgba(45,90,67,0.08), rgba(45,90,67,0.9))" }}
+        />
+        <span>Más activo</span>
       </div>
     </div>
   )
@@ -465,7 +418,7 @@ export function AnalyticsPanel() {
     <div className="space-y-6">
       {/* Meters: valores con un límite/rango de referencia real (ver
           choosing-a-form.md — "a single ratio against a limit" = Meter). */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MeterCard
           icon={HeartPulse}
           label="Ritmo cardíaco promedio"
@@ -492,20 +445,10 @@ export function AnalyticsPanel() {
           tone={(stats?.sedentaryHoursThisWeek ?? 0) <= 30 ? "good" : (stats?.sedentaryHoursThisWeek ?? 0) <= 45 ? "warning" : "critical"}
           meter={{ value: stats?.sedentaryHoursThisWeek ?? 0, min: 0, max: 60 }}
         />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <StatCard icon={Activity} label="Horas activas esta semana" value={`${(stats?.activeHoursThisWeek ?? 0).toFixed(1)} h`} />
         <StatCard icon={Flame} label="Calorías hoy" value={`${Math.round(dashboard?.activity?.caloriesBurned ?? 0)} kcal`} />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <HeatmapChart hourlyHeatmap={heatmap?.hourlyHeatmap ?? Array(24).fill(0)} />
-        <WeeklyBalanceBar
-          activeHours={stats?.activeHoursThisWeek ?? 0}
-          sedentaryHours={stats?.sedentaryHoursThisWeek ?? 0}
-        />
-      </div>
+      <HeatmapGrid hourlyHeatmap={heatmap?.hourlyHeatmap ?? Array(24).fill(0)} />
 
       <BiometricsSection dashboard={dashboard} />
       <RewardsSection dashboard={dashboard} />
