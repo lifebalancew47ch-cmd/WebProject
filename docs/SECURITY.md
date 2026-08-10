@@ -19,6 +19,10 @@ más allá de servir archivos. Eso cambia bastante qué significa "seguro" aquí
   `react-hooks/exhaustive-deps` en `AuthContext.tsx`, no relacionado a seguridad).
 - Corre automáticamente en CI en cada push/PR a `main` (job `lint` en
   `.github/workflows/ci.yml`).
+- **CodeQL** (`.github/workflows/codeql.yml`, queries `security-extended`) agregado como segunda
+  capa de SAST — a diferencia de ESLint (reglas sintácticas), construye un grafo de flujo de datos
+  real y detecta inyección/XSS/path-traversal que un linter no alcanza a ver. Corre en push/PR a
+  `main` y además cada lunes, para atrapar hallazgos nuevos en código ya mergeado.
 
 **SonarQube:** no se integró — requiere una cuenta/instancia (SonarCloud) y un token que el equipo
 tendría que dar de alta. Si lo quieren, el siguiente paso es crear el proyecto en SonarCloud y
@@ -28,10 +32,15 @@ agregar `SONAR_TOKEN` a los secrets del repo; puedo agregar el job cuando exista
 
 - Job `dependency-audit` en `.github/workflows/ci.yml` corre `npm audit --audit-level=high` en
   cada push/PR.
-- **Hallazgo real al implementar esto:** `npm audit` reporta **6 vulnerabilidades de severidad
-  alta**, todas originadas en `next@14.2.35` (la versión que ya estaba instalada, no algo que
-  cambié). El fix real requiere subir a Next 16 — un cambio mayor que no hice como parte de esta
-  tarea porque no me correspondía decidir unilateralmente un upgrade de versión mayor.
+- **`.github/dependabot.yml`** agregado: PRs semanales (lunes) para `npm` (minors/patches
+  agrupados en un solo PR; majors siempre por separado, para revisarlos con cuidado) y para las
+  GitHub Actions del propio CI (`actions/checkout`, `github/codeql-action`, etc. — también son
+  superficie de supply-chain).
+- **Hallazgo real al implementar esto (actualizado 2026-08-10):** `npm audit` reporta **8
+  vulnerabilidades de severidad alta** (subió de 6 a 8 desde la primera auditoría — nuevos
+  advisories publicados para `next@14.2.35`, la versión que ya estaba instalada, no algo que
+  cambié). El fix real requiere subir a Next 16 — un cambio mayor que no corresponde forzar
+  unilateralmente aquí.
 - **Por qué no es tan grave como suena:** revisé cada advisory — casi todos son sobre Server
   Actions, Server Components, Middleware, WebSocket upgrades y servidores custom. Esta app no usa
   nada de eso (`output: 'export'` = sin servidor Next.js corriendo, sin Middleware, sin Server
@@ -47,10 +56,23 @@ agregar `SONAR_TOKEN` a los secrets del repo; puedo agregar el job cuando exista
 
 ## 3. Gestión Segura de Secretos
 
-- **Auditoría del código fuente:** se revisó todo `app/`, `components/`, `lib/` y `docs/` buscando
-  patrones de credenciales hardcodeadas (connection strings, API keys, contraseñas literales) —
-  **no se encontró ninguna**. Esto ya era una práctica que se venía siguiendo en la sesión (nunca
-  se escribió la credencial de MongoDB usada para investigación en ningún archivo del repo).
+- **Auditoría del código fuente (re-verificada 2026-08-10):** se revisó todo `app/`, `components/`,
+  `lib/` y `docs/` (incluyendo el historial trackeado por git, no solo el working tree) buscando
+  patrones de credenciales hardcodeadas (connection strings, API keys, contraseñas literales,
+  incluyendo la cuenta demo usada para pruebas en vivo) — **no se encontró ninguna committeada**.
+- **`.github/workflows/gitleaks.yml`**: escaneo de secretos en cada push/PR (`gitleaks detect`
+  sobre el historial completo, `fetch-depth: 0`). Ojo con su alcance: Gitleaks escanea **contenido
+  del repositorio** (archivos y commits) — no cubre secretos que solo viven en configuración local
+  de git (ver el hallazgo del PAT abajo, que por eso no lo hubiera detectado).
+- **🚨 Hallazgo activo, no un ítem cerrado:** el remoto `origin` de este repo en la máquina de
+  desarrollo tiene un Personal Access Token de GitHub embebido en texto plano en la URL
+  (`https://usuario:ghp_...@github.com/...`, visible con `git remote -v`). Se reportó por primera
+  vez el 2026-08-06; se nos dijo que ya se había rotado. **Re-verificado en vivo el 2026-08-10:
+  sigue siendo válido** (`GET https://api.github.com/user` con ese token responde `200 OK`, con
+  scopes `repo, workflow` — acceso de lectura/escritura a todos los repos alcanzables por la cuenta
+  más permiso para modificar los workflows de CI). Acción requerida: revocar el token en
+  github.com/settings/tokens y reconfigurar el remoto sin credenciales en texto plano (SSH o Git
+  Credential Manager).
 - **`.gitignore`** corregido: antes solo ignoraba `.env*.local`, dejando la puerta abierta a que un
   `.env` normal se subiera por error. Ahora ignora `.env` y `.env.*` en general, exceptuando
   `.env.example`.
@@ -124,9 +146,9 @@ tiene servidor propio que pueda setear cookies) y no se hizo como parte de esta 
 
 | Punto pedido | Implementado aquí | Pendiente / responsabilidad de otro equipo |
 |---|---|---|
-| SAST | ✅ ESLint + eslint-plugin-security en CI | SonarQube (requiere cuenta) |
-| SCA | ✅ `npm audit` en CI, Snyk opcional | Activar Snyk (requiere `SNYK_TOKEN`); upgrade a Next 16 |
-| Secretos | ✅ `.gitignore`, `.env.example`, auditoría sin hallazgos | — |
+| SAST | ✅ ESLint + eslint-plugin-security + CodeQL en CI | SonarQube (requiere cuenta) |
+| SCA | ✅ `npm audit` + Dependabot en CI, Snyk opcional | Activar Snyk (requiere `SNYK_TOKEN`); upgrade a Next 16 (8 vulns altas) |
+| Secretos | ✅ `.gitignore`, `.env.example`, Gitleaks en CI, auditoría de código sin hallazgos | 🚨 **Revocar el PAT expuesto en `git remote` — sigue activo, ver arriba** |
 | Mínimo privilegio | ⚠️ Hallazgo documentado arriba | Backend: separar roles de Mongo por servicio |
 | Logging seguro | ✅ Sin `console.log` de datos de usuario en el cliente | Backend: auditar sus propios logs de servidor |
 | Headers HTTP | ✅ CSP + headers de seguridad en `render.yaml` | Confirmar sync de Blueprint en Render; considerar httpOnly cookies si el backend llega a soportarlas |
