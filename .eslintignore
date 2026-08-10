@@ -1,0 +1,6 @@
+# `next lint` (removido en Next.js 16 — el script "lint" ahora corre
+# `eslint .` directo) traía estos ignores por defecto; con ESLint corriendo
+# solo, hay que declararlos a mano o termina lintiando el output compilado.
+.next/
+out/
+node_modules/

@@ -31,11 +31,13 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
-      # No bloqueante por ahora: hay vulnerabilidades conocidas en next@14.x
-      # (ver docs/SECURITY.md) cuyo fix requiere subir a Next 16, una
-      # decisión de upgrade mayor que no corresponde forzar aquí. Quitar
-      # `continue-on-error` en cuanto ese upgrade se haga para que el CI
-      # bloquee ante nuevas vulnerabilidades altas/críticas.
+      # Actualizado 2026-08-10: el upgrade a Next 16 (ver docs/SECURITY.md)
+      # ya eliminó las vulnerabilidades altas de `next`. `continue-on-error`
+      # se mantiene por ahora porque quedan 5 vulns altas en dependencias de
+      # lint (`brace-expansion`/`glob`/`js-yaml`, transitivas de
+      # `eslint-config-next`) — no afectan el bundle que se sirve al
+      # navegador, pero arreglarlas de raíz exige migrar a ESLint 9. Quitar
+      # `continue-on-error` cuando esa migración se haga.
       - name: npm audit (nivel alto o superior)
         run: npm audit --audit-level=high
         continue-on-error: true
