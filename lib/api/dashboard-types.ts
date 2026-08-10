@@ -28,6 +28,14 @@ export interface SedentaryActivityResponseDto {
   sedentaryHours: number
   caloriesBurned: number
   hourlyHeatmap: number[] | null
+  // Campos confirmados en vivo el 2026-08-09 (cuenta demo) — no estaban
+  // documentados, el backend ya los regresa con metas/progreso reales:
+  sedentaryScore?: number
+  riskLevel?: string
+  dailyStepsTarget?: number
+  activeMinutesTarget?: number
+  stepsProgress?: number
+  activeProgress?: number
 }
 
 export interface UserRewardsResponseDto {

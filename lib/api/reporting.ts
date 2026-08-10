@@ -41,13 +41,17 @@ export const getReportHistory = (
 // `JSON.parse` sobre el PDF y fallaría siempre con "La respuesta del
 // servidor no se pudo interpretar", aun si el backend genera el archivo bien.
 export const exportReport = (params: ExportReportParams, token: string): Promise<ExportedReportFile> => {
+  // El backend espera `metrics` repetido una vez por valor (?metrics=heartRate&metrics=steps),
+  // NO una sola lista separada por comas — verificado en vivo el 2026-08-09:
+  // mandar "heartRate,steps" completo lo interpreta como un solo código
+  // desconocido y responde 422 ("Unknown metric code 'heartRate,steps'").
   const query = new URLSearchParams({
     scope: params.scope,
     format: params.format,
-    metrics: params.metrics,
     ...(params.scopeId ? { scopeId: params.scopeId } : {}),
     ...(params.from ? { from: params.from } : {}),
     ...(params.to ? { to: params.to } : {}),
   })
+  params.metrics.forEach((metric) => query.append("metrics", metric))
   return blobFetch(REPORTING_API_BASE_URL, `/api/v1/reports/export?${query.toString()}`, { method: "GET" }, token)
 }
