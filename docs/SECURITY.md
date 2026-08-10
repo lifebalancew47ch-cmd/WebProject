@@ -36,11 +36,22 @@ agregar `SONAR_TOKEN` a los secrets del repo; puedo agregar el job cuando exista
   agrupados en un solo PR; majors siempre por separado, para revisarlos con cuidado) y para las
   GitHub Actions del propio CI (`actions/checkout`, `github/codeql-action`, etc. — también son
   superficie de supply-chain).
-- **Hallazgo real al implementar esto (actualizado 2026-08-10):** `npm audit` reporta **8
-  vulnerabilidades de severidad alta** (subió de 6 a 8 desde la primera auditoría — nuevos
-  advisories publicados para `next@14.2.35`, la versión que ya estaba instalada, no algo que
-  cambié). El fix real requiere subir a Next 16 — un cambio mayor que no corresponde forzar
-  unilateralmente aquí.
+- **✅ Resuelto (2026-08-10): upgrade a Next.js 16 + React 19.** Las 8 vulnerabilidades altas de
+  `next@14.2.35` quedaron en 0 — verificado con `npm audit` antes/después. Build (`npm run build`,
+  Turbopack) y las 25 rutas estáticas generadas correctamente; revisado en el navegador (landing,
+  Overview, Analytics, Reports, Organization, About) sin regresiones. Cambios que requirió:
+  - `next lint` **fue removido en Next 16** — el script `lint` ahora corre `eslint .` directo.
+    Sin los ignores que `next lint` aplicaba por defecto, ESLint lintiaba el propio `out/`
+    compilado; se agregó `.eslintignore` (`.next/`, `out/`, `node_modules/`).
+  - `tsconfig.json` reescrito automáticamente por Next (formato + `jsx: "react-jsx"`, requerido
+    por el nuevo JSX transform).
+  - Next 16 ahora auto-genera `AGENTS.md`/`CLAUDE.md` en cada `next dev` (feature nueva para
+    asistentes de IA, ver comentario en `AGENTS.md`) — no existían antes, no se sobrescribió nada.
+  - **Quedan 5 vulnerabilidades altas** en dependencias de **lint/build únicamente**
+    (`brace-expansion`, `glob`, `js-yaml` — transitivas de `@typescript-eslint`/
+    `eslint-config-next`), no en código que se sirve al navegador. Arreglarlas de raíz requiere
+    subir `eslint-config-next` a la v16, que a su vez exige ESLint 9 (migración de config a flat
+    config, `eslint.config.js`) — una migración aparte, no incluida en este cambio.
 - **Por qué no es tan grave como suena:** revisé cada advisory — casi todos son sobre Server
   Actions, Server Components, Middleware, WebSocket upgrades y servidores custom. Esta app no usa
   nada de eso (`output: 'export'` = sin servidor Next.js corriendo, sin Middleware, sin Server
@@ -147,7 +158,7 @@ tiene servidor propio que pueda setear cookies) y no se hizo como parte de esta 
 | Punto pedido | Implementado aquí | Pendiente / responsabilidad de otro equipo |
 |---|---|---|
 | SAST | ✅ ESLint + eslint-plugin-security + CodeQL en CI | SonarQube (requiere cuenta) |
-| SCA | ✅ `npm audit` + Dependabot en CI, Snyk opcional | Activar Snyk (requiere `SNYK_TOKEN`); upgrade a Next 16 (8 vulns altas) |
+| SCA | ✅ `npm audit` + Dependabot en CI, Snyk opcional; **Next.js subido a v16, 0 vulns altas en runtime** | Activar Snyk (requiere `SNYK_TOKEN`); 5 vulns altas restantes son de tooling de lint (requieren migrar a ESLint 9) |
 | Secretos | ✅ `.gitignore`, `.env.example`, Gitleaks en CI, auditoría de código sin hallazgos | 🚨 **Revocar el PAT expuesto en `git remote` — sigue activo, ver arriba** |
 | Mínimo privilegio | ⚠️ Hallazgo documentado arriba | Backend: separar roles de Mongo por servicio |
 | Logging seguro | ✅ Sin `console.log` de datos de usuario en el cliente | Backend: auditar sus propios logs de servidor |
