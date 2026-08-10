@@ -1,14 +1,22 @@
 "use client"
 
-import { useState } from "react"
-import dynamic from "next/dynamic"
 import { ArrowRight, Download } from "lucide-react"
+import { useAuth } from "@/lib/auth/AuthContext"
 
-// Diferido: solo se monta tras el clic en "Solicitar Demo Técnica".
-const DemoRequestModal = dynamic(() => import("./DemoRequestModal").then((mod) => mod.DemoRequestModal))
+// No existe todavía un endpoint/CRM real para recibir solicitudes de demo
+// (ver docs/SECURITY.md sobre no fingir integraciones) — en vez de un
+// formulario que simula un envío que nunca llega a nadie, se abre el
+// cliente de correo del usuario con los datos ya precargados. Es menos
+// pulido, pero es honesto: el clic sí hace algo real.
+function buildDemoMailto(name: string, email: string): string {
+  const subject = "Solicitud de demo técnica — LifeBalance Watch"
+  const body = `Nombre: ${name || "(agrega tu nombre)"}\nCorreo: ${email || "(agrega tu correo)"}\nEmpresa: \n\nMensaje:\n`
+  return `mailto:ventas@lifebalance.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+}
 
 export function OverviewCTA() {
-  const [demoOpen, setDemoOpen] = useState(false)
+  const { user } = useAuth()
+  const displayName = user ? [user.firstName, user.lastName].filter(Boolean).join(" ") : ""
 
   return (
     <section>
@@ -21,13 +29,12 @@ export function OverviewCTA() {
       </p>
 
       <div className="flex flex-wrap items-center justify-center gap-4">
-        <button
-          type="button"
-          onClick={() => setDemoOpen(true)}
+        <a
+          href={buildDemoMailto(displayName, user?.email ?? "")}
           className="inline-flex items-center gap-2 rounded-full bg-[#2D5A43] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1E3E2B]"
         >
           Solicitar Demo Técnica <ArrowRight className="h-4 w-4" />
-        </button>
+        </a>
         <a
           href="/whitepaper.pdf"
           download
@@ -40,8 +47,6 @@ export function OverviewCTA() {
       <p className="mt-12 text-center text-[10px] text-gray-500">
         © 2026 LifeBalance Watch Enterprise. Todos los derechos reservados. | Privacidad | Términos.
       </p>
-
-      <DemoRequestModal open={demoOpen} onClose={() => setDemoOpen(false)} />
     </section>
   )
 }
