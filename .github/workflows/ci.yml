@@ -32,15 +32,15 @@ jobs:
           cache: "npm"
       - run: npm ci
       # Actualizado 2026-08-10: el upgrade a Next 16 (ver docs/SECURITY.md)
-      # ya eliminó las vulnerabilidades altas de `next`. `continue-on-error`
-      # se mantiene por ahora porque quedan 5 vulns altas en dependencias de
-      # lint (`brace-expansion`/`glob`/`js-yaml`, transitivas de
-      # `eslint-config-next`) — no afectan el bundle que se sirve al
-      # navegador, pero arreglarlas de raíz exige migrar a ESLint 9. Quitar
-      # `continue-on-error` cuando esa migración se haga.
+      # eliminó las vulnerabilidades altas de `next`, y la migración de
+      # eslint-config-next a la v16 (que exige ESLint 9 + flat config,
+      # ver eslint.config.mjs) eliminó las últimas 5 que quedaban en
+      # dependencias de lint. `npm audit --audit-level=high` está limpio
+      # (0 vulnerabilidades) — ya no hace falta `continue-on-error`, así
+      # que ahora sí bloquea el pipeline ante vulnerabilidades altas/críticas
+      # nuevas.
       - name: npm audit (nivel alto o superior)
         run: npm audit --audit-level=high
-        continue-on-error: true
       # Escaneo opcional con Snyk — se activa solo si el repo tiene
       # configurado el secret SNYK_TOKEN (Settings → Secrets → Actions).
       # Sin ese secret, este paso se omite sin fallar el pipeline.

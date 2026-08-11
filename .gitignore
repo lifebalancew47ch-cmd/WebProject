@@ -33,3 +33,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code — settings.local.json es config/permite-comandos por máquina,
+# y en la práctica termina acumulando URLs y credenciales de prueba pegadas
+# en los comandos que se fueron aprobando (encontrado: credenciales de la
+# cuenta demo en texto plano). settings.json (sin .local, si existiera) sí
+# se puede trackear porque es config de equipo sin datos sensibles.
+.claude/settings.local.json

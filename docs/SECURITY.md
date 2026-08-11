@@ -8,15 +8,23 @@ más allá de servir archivos. Eso cambia bastante qué significa "seguro" aquí
 
 ## 1. SAST — Análisis Estático de Seguridad
 
-- **`eslint-plugin-security`** agregado como devDependency y activado en `.eslintrc.json`
-  (`plugin:security/recommended-legacy`), sobre la base de `next/core-web-vitals` que ya traía el
-  proyecto.
+- **`eslint-plugin-security`** agregado como devDependency y activado vía flat config
+  (`eslint.config.mjs`, `security.configs.recommended`), sobre la base de `eslint-config-next/core-web-vitals`.
+  **Actualizado 2026-08-10:** migrado de `.eslintrc.json` a flat config porque `eslint-config-next@16`
+  (requerido por el upgrade a Next 16, ver sección 2) exige `eslint >=9.0.0`, y ESLint 9 ya no soporta
+  el formato `.eslintrc.*` ni `.eslintignore` — los ignores (`node_modules/`, `.next/`, `out/`) ahora
+  viven en el propio `eslint.config.mjs`.
 - Se desactivó `security/detect-object-injection`: es una regla con muchísimos falsos positivos en
   TypeScript (marca cualquier `obj[variable]`, incluyendo accesos completamente seguros a objetos
   tipados como `PLANS[planId]` o `MAX_LENGTHS[campo]`). Es la práctica estándar en proyectos reales
   que usan este plugin — dejarla activa generaría ruido sin valor real.
-- `npm run lint` corre limpio con esta configuración (un solo warning preexistente de
-  `react-hooks/exhaustive-deps` en `AuthContext.tsx`, no relacionado a seguridad).
+- **`npm run lint` corre limpio (0 errores, exit code 0).** La migración a `eslint-config-next@16`
+  trajo reglas nuevas del plugin de React Compiler (`react-hooks/set-state-in-effect`, `/immutability`,
+  `/preserve-manual-memoization`), que detectaron 17 casos preexistentes de `setState(...)` llamado
+  directo dentro de un `useEffect` en 11 archivos. Son deuda de calidad de React, no hallazgos de
+  seguridad — se bajaron a `warn` en `eslint.config.mjs` (con la lista y el criterio para quitar el
+  override documentados ahí) para no bloquear CI mientras se corrigen aparte, en un cambio que sí
+  toque esos hooks/componentes con revisión propia.
 - Corre automáticamente en CI en cada push/PR a `main` (job `lint` en
   `.github/workflows/ci.yml`).
 - **CodeQL** (`.github/workflows/codeql.yml`, queries `security-extended`) agregado como segunda
@@ -36,31 +44,29 @@ agregar `SONAR_TOKEN` a los secrets del repo; puedo agregar el job cuando exista
   agrupados en un solo PR; majors siempre por separado, para revisarlos con cuidado) y para las
   GitHub Actions del propio CI (`actions/checkout`, `github/codeql-action`, etc. — también son
   superficie de supply-chain).
-- **✅ Resuelto (2026-08-10): upgrade a Next.js 16 + React 19.** Las 8 vulnerabilidades altas de
-  `next@14.2.35` quedaron en 0 — verificado con `npm audit` antes/después. Build (`npm run build`,
-  Turbopack) y las 25 rutas estáticas generadas correctamente; revisado en el navegador (landing,
-  Overview, Analytics, Reports, Organization, About) sin regresiones. Cambios que requirió:
+- **✅ Resuelto (2026-08-10): upgrade a Next.js 16 + React 19, y migración a ESLint 9.**
+  `npm audit --audit-level=high` pasó de **8 vulnerabilidades altas a 0**, verificado con `npm audit`
+  antes/después de cada paso. Build (`npm run build`, Turbopack) y las 25 rutas estáticas generadas
+  correctamente. Cambios que requirió:
   - `next lint` **fue removido en Next 16** — el script `lint` ahora corre `eslint .` directo.
-    Sin los ignores que `next lint` aplicaba por defecto, ESLint lintiaba el propio `out/`
-    compilado; se agregó `.eslintignore` (`.next/`, `out/`, `node_modules/`).
+  - `eslint-config-next` subido de `^14.2.29` a `16.3.0` para que coincida con la versión real de
+    Next, lo cual exige `eslint >=9.0.0` (antes `^8.57.1`) — ESLint 9 ya no soporta `.eslintrc.*` ni
+    `.eslintignore`, así que la config se migró a flat config (`eslint.config.mjs`, ver sección 1).
+    Esto eliminó las 5 vulnerabilidades altas restantes (`brace-expansion`, `glob`, `js-yaml`,
+    transitivas de la versión vieja de `eslint-config-next`) sin necesidad de `--force` ni pins
+    manuales — quedaron resueltas por el propio bump de versión.
   - `tsconfig.json` reescrito automáticamente por Next (formato + `jsx: "react-jsx"`, requerido
     por el nuevo JSX transform).
   - Next 16 ahora auto-genera `AGENTS.md`/`CLAUDE.md` en cada `next dev` (feature nueva para
     asistentes de IA, ver comentario en `AGENTS.md`) — no existían antes, no se sobrescribió nada.
-  - **Quedan 5 vulnerabilidades altas** en dependencias de **lint/build únicamente**
-    (`brace-expansion`, `glob`, `js-yaml` — transitivas de `@typescript-eslint`/
-    `eslint-config-next`), no en código que se sirve al navegador. Arreglarlas de raíz requiere
-    subir `eslint-config-next` a la v16, que a su vez exige ESLint 9 (migración de config a flat
-    config, `eslint.config.js`) — una migración aparte, no incluida en este cambio.
-- **Por qué no es tan grave como suena:** revisé cada advisory — casi todos son sobre Server
-  Actions, Server Components, Middleware, WebSocket upgrades y servidores custom. Esta app no usa
-  nada de eso (`output: 'export'` = sin servidor Next.js corriendo, sin Middleware, sin Server
-  Actions — confirmado en `next.config.mjs`). No significa que no haya que arreglarlo, pero no es
-  explotable en el modo en que esta app está desplegada hoy.
-- Por eso el paso de `npm audit` en CI tiene `continue-on-error: true` por ahora — informa pero no
-  bloquea el pipeline. En cuanto se decida hacer el upgrade a Next 16 (fuera del alcance de esta
-  tarea), hay que quitar ese `continue-on-error` para que vulnerabilidades altas/críticas sí
-  bloqueen merges futuros.
+- **Por qué las 8 vulns originales de `next@14.2.35` no eran tan graves como sonaban:** revisé cada
+  advisory — casi todos eran sobre Server Actions, Server Components, Middleware, WebSocket upgrades
+  y servidores custom. Esta app no usa nada de eso (`output: 'export'` = sin servidor Next.js
+  corriendo, sin Middleware, sin Server Actions — confirmado en `next.config.mjs`), así que no eran
+  explotables en el modo en que esta app estaba desplegada. Igual se corrigieron de raíz con el
+  upgrade en vez de dejarlas documentadas como "no explotable por ahora".
+- El paso de `npm audit` en CI **ya no tiene `continue-on-error`** — con 0 vulnerabilidades altas
+  conocidas, el pipeline ahora sí bloquea merges si aparece una nueva.
 - **Snyk:** el job incluye un paso opcional que solo corre si el repo tiene configurado el secret
   `SNYK_TOKEN` (Settings → Secrets and variables → Actions). Sin ese secret, se omite sin fallar el
   pipeline — no puedo crear la cuenta de Snyk por ustedes.
@@ -75,15 +81,21 @@ agregar `SONAR_TOKEN` a los secrets del repo; puedo agregar el job cuando exista
   sobre el historial completo, `fetch-depth: 0`). Ojo con su alcance: Gitleaks escanea **contenido
   del repositorio** (archivos y commits) — no cubre secretos que solo viven en configuración local
   de git (ver el hallazgo del PAT abajo, que por eso no lo hubiera detectado).
-- **🚨 Hallazgo activo, no un ítem cerrado:** el remoto `origin` de este repo en la máquina de
-  desarrollo tiene un Personal Access Token de GitHub embebido en texto plano en la URL
-  (`https://usuario:ghp_...@github.com/...`, visible con `git remote -v`). Se reportó por primera
-  vez el 2026-08-06; se nos dijo que ya se había rotado. **Re-verificado en vivo el 2026-08-10:
-  sigue siendo válido** (`GET https://api.github.com/user` con ese token responde `200 OK`, con
-  scopes `repo, workflow` — acceso de lectura/escritura a todos los repos alcanzables por la cuenta
-  más permiso para modificar los workflows de CI). Acción requerida: revocar el token en
-  github.com/settings/tokens y reconfigurar el remoto sin credenciales en texto plano (SSH o Git
-  Credential Manager).
+- **✅ Resuelto (2026-08-10):** el remoto `origin` de este repo en la máquina de desarrollo tenía un
+  Personal Access Token de GitHub embebido en texto plano en la URL (`https://usuario:ghp_...@github.com/...`,
+  visible con `git remote -v`). Se reportó por primera vez el 2026-08-06; el 2026-08-06 se dijo que
+  ya se había rotado, pero **re-verificado en vivo el 2026-08-10 seguía siendo válido**
+  (`GET https://api.github.com/user` → `200 OK`, scopes `repo, workflow`). Cierre real el mismo día:
+  1. Token revocado en github.com/settings/tokens — reverificado en vivo, `GET .../user` con ese
+     token ahora responde `401`.
+  2. `git remote set-url origin https://github.com/lifebalancew47ch-cmd/WebProject.git` — URL sin
+     credenciales embebidas.
+  3. Se instaló GitHub CLI (`winget install GitHub.cli`) y se autenticó con `gh auth login`
+     (flujo de navegador, sesión propia del usuario).
+  4. `gh auth setup-git` configuró `credential.https://github.com.helper` apuntando a
+     `gh auth git-credential` — `git push`/`pull` a GitHub siguen funcionando normal, sin ningún
+     secreto en texto plano en el repo ni en la config de git.
+  Verificado con `gh auth status`: sesión activa, scopes `repo`+`workflow`.
 - **`.gitignore`** corregido: antes solo ignoraba `.env*.local`, dejando la puerta abierta a que un
   `.env` normal se subiera por error. Ahora ignora `.env` y `.env.*` en general, exceptuando
   `.env.example`.
@@ -157,9 +169,9 @@ tiene servidor propio que pueda setear cookies) y no se hizo como parte de esta 
 
 | Punto pedido | Implementado aquí | Pendiente / responsabilidad de otro equipo |
 |---|---|---|
-| SAST | ✅ ESLint + eslint-plugin-security + CodeQL en CI | SonarQube (requiere cuenta) |
-| SCA | ✅ `npm audit` + Dependabot en CI, Snyk opcional; **Next.js subido a v16, 0 vulns altas en runtime** | Activar Snyk (requiere `SNYK_TOKEN`); 5 vulns altas restantes son de tooling de lint (requieren migrar a ESLint 9) |
-| Secretos | ✅ `.gitignore`, `.env.example`, Gitleaks en CI, auditoría de código sin hallazgos | 🚨 **Revocar el PAT expuesto en `git remote` — sigue activo, ver arriba** |
+| SAST | ✅ ESLint 9 (flat config) + eslint-plugin-security + CodeQL en CI, `npm run lint` en 0 errores | SonarQube (requiere cuenta); limpiar los 17 casos de `react-hooks/*` bajados a warning |
+| SCA | ✅ `npm audit` en **0 vulnerabilidades altas** (Next 16 + ESLint 9), ya sin `continue-on-error`; Dependabot en CI, Snyk opcional | Activar Snyk (requiere `SNYK_TOKEN`) |
+| Secretos | ✅ `.gitignore`, `.env.example`, Gitleaks en CI, auditoría de código sin hallazgos, **PAT expuesto revocado y remote reconfigurado con gh CLI (2026-08-10)** | — |
 | Mínimo privilegio | ⚠️ Hallazgo documentado arriba | Backend: separar roles de Mongo por servicio |
 | Logging seguro | ✅ Sin `console.log` de datos de usuario en el cliente | Backend: auditar sus propios logs de servidor |
 | Headers HTTP | ✅ CSP + headers de seguridad en `render.yaml` | Confirmar sync de Blueprint en Render; considerar httpOnly cookies si el backend llega a soportarlas |
